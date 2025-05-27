@@ -6,6 +6,9 @@
 *.lo
 *.o
 *.obj
+obj
+!resources/*.obj
+!models/*.obj
 
 # Precompiled Headers
 *.gch
@@ -30,3 +33,9 @@
 *.exe
 *.out
 *.app
+scop
+
+# Other
+.DS_Store
+.vscode
+notes.txt
