@@ -1,8 +1,7 @@
 
 NAME = scop
 CXX = g++
-CXXFLAGS = -Wall -Werror -Wextra -std=c++20
-CXXFLAGS += -DGL_SILENCE_DEPRECATION
+CXXFLAGS = -Wall -Werror -Wextra -std=c++20 -DGL_SILENCE_DEPRECATION -MMD -MP
 
 GREEN = \033[0;32m
 RESET = \033[0m
@@ -13,23 +12,19 @@ GLFW_LIB = -L/opt/homebrew/opt/glfw/lib -lglfw -framework OpenGL -framework Coco
 
 LEEAKSAN_LDFLAG = -L../LeakSanitizer -llsan -lc++ -Wno-gnu-include-next -I ../LeakSanitize
 
-ifndef LEN
-	CXXFLAGS += -Wall -Werror -Wextra -std=c++20
-endif
-
 ifdef DEBUG
 	CXXFLAGS += -g -fsanitize=address
 endif
 
 SRC =	main.cpp\
-		gl.cpp
+		gl.cpp\
+		Shader.cpp\
+		ShaderProgram.cpp
 
 OBJ_DIR = obj
-# VISUALS_DIR = /visuals
-# PARSE_DIR = /parser
 
 OBJ = $(SRC:%.cpp=$(OBJ_DIR)/%.o)
-# HEADERS =
+DEP = $(OBJ:.o=.d)
 
 all: $(NAME)
 
@@ -40,9 +35,11 @@ $(NAME): $(OBJ)
 	@$(CXX) $(CXXFLAGS) $(GLAD_INCLUDE) $(GLFW_INCLUDE) $(OBJ) -o $(NAME) $(GLFW_LIB)
 	@printf "$(GREEN)Compiled$(RESET)\n"
 
-$(OBJ_DIR)/%.o: %.cpp Makefile | $(OBJ_DIR)
+$(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 	@mkdir -p $(dir $@)
 	@$(CXX) $(CXXFLAGS) $(GLAD_INCLUDE) $(GLFW_INCLUDE) -c $< -o $@
+
+-include $(DEP)
 
 clean:
 	@rm -rf $(OBJ_DIR)

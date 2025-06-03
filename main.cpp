@@ -1,8 +1,11 @@
-
 #include <iostream>
-#include <string>
+#include <exception>
+#include <vector>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
+#include "Model.hpp"
+#include "Shader.hpp"
+#include "ShaderProgram.hpp"
 
 using namespace std;
 
@@ -37,14 +40,8 @@ int main(void) {
         return -1;
     }
 
-    // Triangle vertex data
-    GLfloat vertices[] = {
-        0.0f,  0.5f,  // Top
-        -0.5f,  0.5f,
-        -0.5f, -0.5f,  // Bottom left
-        0.5f, -0.5f,
-        0.5f, -0.5f   // Bottom right
-    };
+    Model model;
+    const vector<GLfloat> vertices = model.getVertices();
 
     // Vertex Shader source
     const char* vertexShaderSource = R"(
@@ -66,21 +63,18 @@ int main(void) {
     const GLubyte* version = glGetString(GL_VERSION);
     cout << "OpenGL version: " << version << endl;
 
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
+    vector<GLuint> shaders;
+    Shader *vertexShaderInstance = new Shader(vertexShaderSource, GL_VERTEX_SHADER);
+    shaders.push_back(vertexShaderInstance->getShader());
 
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
+    Shader *fragmentShaderInstance = new Shader(fragmentShaderSource, GL_FRAGMENT_SHADER);
+    shaders.push_back(fragmentShaderInstance->getShader());
 
-    GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
+    ShaderProgram *shaderProgramInstance = new ShaderProgram(shaders);
+    GLuint shaderProgram = shaderProgramInstance->getShaderProgram();
 
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    vertexShaderInstance->deleteShader();
+    fragmentShaderInstance->deleteShader();
 
     // Vertex array and vertex buffer object (order matters)
     GLuint VAO, VBO;
@@ -89,13 +83,15 @@ int main(void) {
     glBindVertexArray(VAO);
 
     glGenBuffers(1, &VBO);
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * vertices.size(), vertices.data(), GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0); // unbind the object
+    glBindVertexArray(0);
 
     // Sets the color that will be used when clearing the screen
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -119,11 +115,18 @@ int main(void) {
         glfwPollEvents();
     }
 
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteProgram(shaderProgram);
 
     glfwDestroyWindow(window);
     glfwTerminate();
+
+    delete vertexShaderInstance;
+    delete fragmentShaderInstance;
+    delete shaderProgramInstance;
+
     return 0;
 }
