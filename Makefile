@@ -1,16 +1,22 @@
 
 NAME = scop
 CXX = g++
-CXXFLAGS = -Wall -Werror -Wextra -std=c++20 -DGL_SILENCE_DEPRECATION -MMD -MP
+CXXFLAGS = -Wall -Werror -Wextra -DGL_SILENCE_DEPRECATION -MMD -MP
 
-GREEN = \033[0;32m
-RESET = \033[0m
+ifeq ($(USER), elenakulichkova)
+CXXFLAGS += -std=c++20
+else
+CXXFLAGS += -std=c++2a
+endif
 
 GLAD_INCLUDE = -Iinclude
 GLFW_INCLUDE = -I/opt/homebrew/opt/glfw/include
 GLFW_LIB = -L/opt/homebrew/opt/glfw/lib -lglfw -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
 
 LEEAKSAN_LDFLAG = -L../LeakSanitizer -llsan -lc++ -Wno-gnu-include-next -I ../LeakSanitize
+
+GREEN = \033[0;32m
+RESET = \033[0m
 
 ifdef DEBUG
 	CXXFLAGS += -g -fsanitize=address
