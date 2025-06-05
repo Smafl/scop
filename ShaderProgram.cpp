@@ -1,4 +1,5 @@
 #include "ShaderProgram.hpp"
+#include "iostream"
 #include <vector>
 #include <glad/gl.h>
 
@@ -20,6 +21,8 @@ ShaderProgram::ShaderProgram(vector<GLuint> &shaders)
 	if (shaders.empty()) {
 		throw ShaderProgramException(ShaderProgramException::SHADERS_NOT_FOUND);
 	}
+
+	cout << "Creating shader program..." << endl;
 
 	_shaderProgram = glCreateProgram();
 	for (const auto &shader : shaders) {

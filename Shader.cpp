@@ -24,12 +24,14 @@ const char *ShaderException::what() const noexcept {
 Shader::Shader(const char *fileName, GLenum shaderType)
 	: _shaderType(shaderType)
 {
-	if (!isValidShaderType(_shaderType)) {
-		throw ShaderException(ShaderException::TYPE_NOT_FOUND);
-	}
-
 	if (fileName == nullptr || fileName[0] == '\0') {
 		throw ShaderException(ShaderException::SOURCE_NOT_FOUND);
+	}
+
+	cout << "Creating shader from " << fileName << "..." << endl;
+
+	if (!isValidShaderType(_shaderType)) {
+		throw ShaderException(ShaderException::TYPE_NOT_FOUND);
 	}
 
 	_shaderSourceStr = getFileContent(fileName);
@@ -75,8 +77,8 @@ bool Shader::isValidShaderType(GLenum type) const {
 string Shader::getFileContent(const char *fileName) {
 	ifstream inputFile(fileName, ios::in);
 	if (!inputFile) {
-		perror("Error opening file");
-		cout << "No inputFile: " << fileName << endl;
+		cerr << "No inputFile: " << fileName << endl;
+		cerr << "Error code: " << strerror(errno) << endl;
 		return "";
 	}
 
