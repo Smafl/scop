@@ -52,32 +52,15 @@ int main(void) {
             throw runtime_error("Vertices is empty");
         }
 
-        // Vertex Shader source
-        // const char* vertexShaderSource = "";
-        const char* vertexShaderSource = R"(
-            #version 410 core
-            layout (location = 0) in vec2 aPos;
-            void main() {
-                gl_Position = vec4(aPos, 0.0, 2.0);
-            })";
-
-        // Fragment Shader source
-        const char* fragmentShaderSource = R"(
-            #version 410 core
-            out vec4 FragColor;
-            void main() {
-                FragColor = vec4(1.0, 0.2, 0.3, 1.0);
-            })";
-
         // Check OpenGL version
         const GLubyte* version = glGetString(GL_VERSION);
         cout << "OpenGL version: " << version << endl;
 
         vector<GLuint> shaders;
-        Shader *vertexShaderInstance = new Shader(vertexShaderSource, GL_VERTEX_SHADER);
+        Shader *vertexShaderInstance = new Shader("../shaders/default.vert", GL_VERTEX_SHADER);
         shaders.push_back(vertexShaderInstance->getShader());
 
-        Shader *fragmentShaderInstance = new Shader(fragmentShaderSource, GL_FRAGMENT_SHADER);
+        Shader *fragmentShaderInstance = new Shader("../shaders/default.frag", GL_FRAGMENT_SHADER);
         shaders.push_back(fragmentShaderInstance->getShader());
 
         ShaderProgram *shaderProgramInstance = new ShaderProgram(shaders);

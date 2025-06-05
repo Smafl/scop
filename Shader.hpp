@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <exception>
 #include <glad/gl.h>
 
@@ -22,17 +23,19 @@ private:
 
 class Shader {
 public:
-	explicit Shader(const char *shaderSource, GLenum shaderType);
+	explicit Shader(const char *fileName, GLenum shaderType);
 
 	GLuint getShader() const;
 	void deleteShader();
 
 private:
+	string _shaderSourceStr;
 	const char *_shaderSource;
 	GLenum _shaderType;
 	GLuint _shader;
 	static const GLuint _shaderTypes[5];
 
 	bool isValidShaderType(GLenum type) const;
+	string getFileContent(const char *fileName);
 	Shader();
 };

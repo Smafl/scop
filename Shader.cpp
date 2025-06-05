@@ -1,8 +1,13 @@
 #include "Shader.hpp"
+#include <string>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <vector>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
+
+using namespace std;
 
 ShaderException::ShaderException(ErrorCode err)
 	: _errorCode(err) {}
@@ -16,16 +21,19 @@ const char *ShaderException::what() const noexcept {
 	}
 }
 
-Shader::Shader(const char *shaderSource, GLenum shaderType)
-	: _shaderSource(shaderSource), _shaderType(shaderType)
+Shader::Shader(const char *fileName, GLenum shaderType)
+	: _shaderType(shaderType)
 {
 	if (!isValidShaderType(_shaderType)) {
 		throw ShaderException(ShaderException::TYPE_NOT_FOUND);
 	}
 
-	if (shaderSource == nullptr || shaderSource[0] == '\0') {
+	if (fileName == nullptr || fileName[0] == '\0') {
 		throw ShaderException(ShaderException::SOURCE_NOT_FOUND);
 	}
+
+	_shaderSourceStr = getFileContent(fileName);
+	_shaderSource = _shaderSourceStr.c_str();
 
 	_shader = glCreateShader(_shaderType);
 	glShaderSource(_shader, 1, &_shaderSource, NULL);
@@ -62,6 +70,23 @@ bool Shader::isValidShaderType(GLenum type) const {
 			return true;
 	}
 	return false;
+}
+
+string Shader::getFileContent(const char *fileName) {
+	ifstream inputFile(fileName, ios::in);
+	if (!inputFile) {
+		perror("Error opening file");
+		cout << "No inputFile: " << fileName << endl;
+		return "";
+	}
+
+	string content = "";
+	string line;
+	while (getline(inputFile, line)) {
+		content += line + "\n";
+	}
+	inputFile.close();
+	return(content);
 }
 
 GLuint Shader::getShader() const {
