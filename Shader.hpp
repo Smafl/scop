@@ -4,9 +4,7 @@
 #include <exception>
 #include <glad/gl.h>
 
-using namespace std;
-
-class ShaderException : public exception {
+class ShaderException : public std::exception {
 public:
 	enum ErrorCode {
 		TYPE_NOT_FOUND,
@@ -29,13 +27,13 @@ public:
 	void deleteShader();
 
 private:
-	string _shaderSourceStr;
+	std::string _shaderSourceStr;
 	const char *_shaderSource;
 	GLenum _shaderType;
 	GLuint _shader;
 	static const GLuint _shaderTypes[5];
 
 	bool isValidShaderType(GLenum type) const;
-	string getFileContent(const char *fileName);
+	std::string getFileContent(const char *fileName);
 	Shader();
 };

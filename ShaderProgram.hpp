@@ -3,9 +3,7 @@
 #include <vector>
 #include <glad/gl.h>
 
-using namespace std;
-
-class ShaderProgramException : public exception {
+class ShaderProgramException : public std::exception {
 public:
 	enum ErrorCode {
 		SHADERS_NOT_FOUND,
@@ -21,7 +19,7 @@ private:
 
 class ShaderProgram {
 public:
-	explicit ShaderProgram(vector<GLuint> &shaders);
+	explicit ShaderProgram(std::vector<GLuint> &shaders);
 	GLuint getShaderProgram() const;
 
 private:

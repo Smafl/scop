@@ -82,13 +82,9 @@ string Shader::getFileContent(const char *fileName) {
 		return "";
 	}
 
-	string content = "";
-	string line;
-	while (getline(inputFile, line)) {
-		content += line + "\n";
-	}
-	inputFile.close();
-	return(content);
+	ostringstream content;
+	content << inputFile.rdbuf();
+	return(content.str());
 }
 
 GLuint Shader::getShader() const {

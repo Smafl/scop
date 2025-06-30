@@ -11,6 +11,7 @@ endif
 
 GLAD_INCLUDE = -Iinclude
 GLFW_INCLUDE = -I/opt/homebrew/opt/glfw/include
+GLM_INCLUDE = -I/opt/homebrew/include/glm
 GLFW_LIB = -L/opt/homebrew/opt/glfw/lib -lglfw -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
 
 LEEAKSAN_LDFLAG = -L../LeakSanitizer -llsan -lc++ -Wno-gnu-include-next -I ../LeakSanitize
@@ -38,12 +39,12 @@ $(OBJ_DIR):
 	@mkdir -p $(OBJ_DIR)
 
 $(NAME): $(OBJ)
-	@$(CXX) $(CXXFLAGS) $(GLAD_INCLUDE) $(GLFW_INCLUDE) $(OBJ) -o $(NAME) $(GLFW_LIB)
+	@$(CXX) $(CXXFLAGS) $(GLAD_INCLUDE) $(GLFW_INCLUDE) $(GLM_INCLUDE) $(OBJ) -o $(NAME) $(GLFW_LIB)
 	@printf "$(GREEN)Compiled$(RESET)\n"
 
 $(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 	@mkdir -p $(dir $@)
-	@$(CXX) $(CXXFLAGS) $(GLAD_INCLUDE) $(GLFW_INCLUDE) -c $< -o $@
+	@$(CXX) $(CXXFLAGS) $(GLAD_INCLUDE) $(GLFW_INCLUDE) $(GLM_INCLUDE) -c $< -o $@
 
 -include $(DEP)
 
