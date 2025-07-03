@@ -26,7 +26,8 @@ endif
 SRC =	main.cpp\
 		gl.cpp\
 		Shader.cpp\
-		ShaderProgram.cpp
+		ShaderProgram.cpp\
+		MatrixTransform.cpp
 
 OBJ_DIR = obj
 
