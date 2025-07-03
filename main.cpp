@@ -1,35 +1,15 @@
 #include <iostream>
 #include <exception>
 #include <vector>
-#include <array>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include "RenderModel.hpp"
 #include "Shader.hpp"
 #include "ShaderProgram.hpp"
 #include "MatrixTransform.hpp"
-#include <math.h>
 #include <iomanip>  // For std::setw and formatting
 
 using namespace std;
-
-// void perspective(GLfloat *matrix, GLfloat fov, GLfloat aspect, GLfloat near, GLfloat far, GLfloat *result) {
-//     memcpy(result, matrix, sizeof(GLfloat) * 16);
-//     GLfloat f = 1.0f / tan(degreesToRadians(fov) / 2.0f);
-
-//     result[0] = f / aspect;
-//     result[5] = f;
-//     result[10] = (far+near)/(near-far);
-//     result[11] = -1;
-//     result[14] = (2*far*near)/(near-far);
-// }
-
-void translation(GLfloat *matrix, GLfloat x, GLfloat y, GLfloat z, GLfloat *result) {
-    memcpy(result, matrix, sizeof(GLfloat) * 16);
-    result[3] = matrix[3] + x;
-    result[7] = matrix[7] + y;
-    result[11] = matrix[11] + z;
-}
 
 void printMatrix(GLfloat *matrix) {
     // cout << fixed << setprecision(4);
@@ -165,17 +145,18 @@ int main(void) {
         GLfloat rotation = 0.0f;
         double prevTime = glfwGetTime();
 
-        // GLfloat translate = 0.0f;
+        // GLfloat translation = 0.0f;
         // GLfloat delta = 0.0025f;
 
-        // GLfloat fov = 80.0f;
-        // GLfloat aspect = (float)width / height;
-        // GLfloat near = 0.1f;
-        // GLfloat far = 100.0f;
+        GLfloat fov = 45.0f;
+        GLfloat aspect = (float)width / height;
+        GLfloat near = 0.1f;
+        GLfloat far = 100.0f;
 
         glEnable(GL_DEPTH_TEST);
 
         // Loop until the user closes the window
+        // int printMatrixCounter = 0;
         while (!glfwWindowShouldClose(window)) {
             // Render here
 
@@ -190,36 +171,44 @@ int main(void) {
                 prevTime = currentTime;
             }
 
-            // translate += delta;
-            // if (translate >= 0.5f || translate <= -0.5f) {
+            // translation += delta;
+            // if (translation >= 0.5f || translation <= -0.5f) {
             //     delta *= -1.0f;
             // }
 
-            GLfloat scale[16], rotate[16], modelMatrix[16];
+            GLfloat modelMatrix[16], projectionMatrix[16];
+            GLfloat scale[16], rotate[16];
+
             MatrixTransform::loadIdentity(scale);
-            MatrixTransform::loadIdentity(rotate);
             MatrixTransform::scale(scale, scaleFactor);
-            MatrixTransform::rotateX(rotate, rotation);
-            MatrixTransform::multiply(scale, rotate, modelMatrix);
 
-            // GLfloat viewMatrix[16];
-            // translation(translationMatrix, translate * 2, translate, 0.0, viewMatrix);
+            MatrixTransform::loadIdentity(rotate);
+            MatrixTransform::rotateY(rotate, rotation);
+            MatrixTransform::multiply(rotate, scale, modelMatrix);
 
-            // GLfloat perspectiveMatrix[16];
-            // perspective(perspectiveIdenMatrix, fov, aspect, near, far, perspectiveMatrix);
+            // MatrixTransform::translate(modelMatrix, translation * 2, translation, 0.0f);
 
-            // int printMatrixCounter = 0;
+            MatrixTransform::loadIdentity(projectionMatrix);
+            MatrixTransform::perspective(projectionMatrix, fov, aspect, near, far);
+
             // if (printMatrixCounter == 0) {
-            //     printMatrix(viewMatrix);
+            //     printMatrix(modelMatrix);
             //     printMatrixCounter = 1;
             // }
 
-            int modelMatrixLoc = glGetUniformLocation(shaderProgram, "modelMatrix"); // check for error (return -1)
-            glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, modelMatrix);
+            int modelMatrixLoc = glGetUniformLocation(shaderProgram, "modelMatrix");
+            if (modelMatrixLoc == -1) {
+                throw runtime_error("Error getting uniform location of model matrix");
+            }
+            glUniformMatrix4fv(modelMatrixLoc, 1, GL_TRUE, modelMatrix);
+
             // int viewMatrixLoc = glGetUniformLocation(shaderProgram, "viewMatrix");
             // glUniformMatrix4fv(viewMatrixLoc, 1, GL_TRUE, viewMatrix);
-            // int perspectiveMatrixLoc = glGetUniformLocation(shaderProgram, "perspectiveMatrix");
-            // glUniformMatrix4fv(perspectiveMatrixLoc, 1, GL_TRUE, perspectiveMatrix);
+            int projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
+            if (projectionMatrixLoc == -1) {
+                throw runtime_error("Error getting uniform location of projection matrix");
+            }
+            glUniformMatrix4fv(projectionMatrixLoc, 1, GL_TRUE, projectionMatrix);
 
             glBindVertexArray(VAO);
             // glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -248,6 +237,8 @@ int main(void) {
         cerr << "Shader error: " << e.what() << endl;
     } catch (const ShaderProgramException &e) {
         cerr << "Shader program error: " << e.what() << endl;
+    } catch (const MatrixTransformException &e) {
+        cerr << "Matrix transformation error: " << e.what() << endl;
     } catch (const exception &e) {
         cerr << e.what() << endl;
         return terminateWindow(window);

@@ -51,6 +51,22 @@ void MatrixTransform::rotateZ(GLfloat *matrix, GLfloat angleDegree) {
     matrix[5] = c;
 }
 
+void MatrixTransform::translate(GLfloat *matrix, GLfloat x, GLfloat y, GLfloat z) {
+	matrix[3] = matrix[3] + x;
+    matrix[7] = matrix[7] + y;
+    matrix[11] = matrix[11] + z;
+}
+
+void MatrixTransform::perspective(GLfloat *matrix, GLfloat fov, GLfloat aspect, GLfloat near, GLfloat far) {
+    GLfloat f = 1.0f / tan(degreesToRadians(fov) / 2.0f);
+
+    matrix[0] = f / aspect;
+    matrix[5] = f;
+    matrix[10] = (far+near)/(near-far);
+    matrix[11] = -1;
+    matrix[14] = (2*far*near)/(near-far);
+}
+
 void MatrixTransform::loadIdentity(GLfloat *matrix) {
 	for (int i = 0; i < 16; ++i)
         matrix[i] = 0.0f;
@@ -62,13 +78,12 @@ void MatrixTransform::loadIdentity(GLfloat *matrix) {
 }
 
 void MatrixTransform::multiply(GLfloat *m1, GLfloat *m2, GLfloat *result) {
-	// row- / column- issue
     GLfloat temp[16];
     for (int row = 0; row < 4; ++row) {
         for (int col = 0; col < 4; ++col) {
             GLfloat sum = 0;
             for (int k = 0; k < 4; ++k) {
-                sum += m1[row + k * 4] * m2[k + col * 4];
+                sum += m1[row * 4 + k] * m2[k * 4 + col];
             }
             temp[row * 4 + col] = sum;
         }

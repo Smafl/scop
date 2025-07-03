@@ -6,8 +6,9 @@ layout (location = 1) in vec3 aColor;
 out vec3 vertexColor;
 
 uniform mat4 modelMatrix;
+uniform mat4 projectionMatrix;
 
 void main() {
-	gl_Position = modelMatrix * vec4(aPos);
+	gl_Position = projectionMatrix * modelMatrix * vec4(aPos);
 	vertexColor = aColor;
 }
