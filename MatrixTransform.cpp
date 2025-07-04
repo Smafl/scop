@@ -63,8 +63,8 @@ void MatrixTransform::perspective(GLfloat *matrix, GLfloat fov, GLfloat aspect, 
     matrix[0] = f / aspect;
     matrix[5] = f;
     matrix[10] = (far+near)/(near-far);
-    matrix[11] = -1;
-    matrix[14] = (2*far*near)/(near-far);
+    matrix[11] = (2*far*near)/(near-far);
+    matrix[14] = -1;
 }
 
 void MatrixTransform::loadIdentity(GLfloat *matrix) {

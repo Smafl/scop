@@ -89,26 +89,26 @@ int main(void) {
 
         GLuint indices[] = {
             // pyramid
-            0,1,2,
-            0,2,3,
-            0,1,4,
-            1,2,4,
-            2,3,4,
-            3,0,4,
+            // 0,1,2,
+            // 0,2,3,
+            // 0,1,4,
+            // 1,2,4,
+            // 2,3,4,
+            // 3,0,4,
 
             // cube
-            // 0, 1, 2,
-            // 2, 3, 0,
-            // 1, 5, 6,
-            // 6, 2, 1,
-            // 5, 4, 7,
-            // 7, 6, 5,
-            // 4, 0, 3,
-            // 3, 7, 4,
-            // 3, 2, 6,
-            // 6, 7, 3,
-            // 4, 5, 1,
-            // 1, 0, 4
+            0, 1, 2,
+            2, 3, 0,
+            1, 5, 6,
+            6, 2, 1,
+            5, 4, 7,
+            7, 6, 5,
+            4, 0, 3,
+            3, 7, 4,
+            3, 2, 6,
+            6, 7, 3,
+            4, 5, 1,
+            1, 0, 4
         };
 
         // Vertex array and vertex buffer object (order matters)
@@ -141,19 +141,26 @@ int main(void) {
         // Sets the color that will be used when clearing the screen
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-        GLfloat scaleFactor = 0.5f;
+        GLfloat scaleFactor = 0.25f;
         GLfloat rotation = 0.0f;
         double prevTime = glfwGetTime();
 
-        // GLfloat translation = 0.0f;
-        // GLfloat delta = 0.0025f;
+        GLfloat translation = 0.0f;
+        GLfloat delta = 0.00025f;
 
+        // the field of view
         GLfloat fov = 45.0f;
-        GLfloat aspect = (float)width / height;
+        GLfloat aspect = (GLfloat)width / (GLfloat)height;
         GLfloat near = 0.1f;
         GLfloat far = 100.0f;
 
+        // the depth value for every pixel
+        // when enabled: performing the depth test
         glEnable(GL_DEPTH_TEST);
+
+        // glEnable(GL_CULL_FACE);
+        // glFrontFace(GL_CW);
+        // glCullFace(GL_BACK);
 
         // Loop until the user closes the window
         // int printMatrixCounter = 0;
@@ -167,14 +174,14 @@ int main(void) {
 
             double currentTime = glfwGetTime();
             if (currentTime - prevTime >= 1 / 60) {
-                rotation += 0.5f;
+                rotation += 0.25f;
                 prevTime = currentTime;
             }
 
-            // translation += delta;
-            // if (translation >= 0.5f || translation <= -0.5f) {
-            //     delta *= -1.0f;
-            // }
+            translation += delta;
+            if (translation >= 0.25f || translation <= -0.25f) {
+                delta *= -1.0f;
+            }
 
             GLfloat modelMatrix[16], projectionMatrix[16];
             GLfloat scale[16], rotate[16];
@@ -186,7 +193,7 @@ int main(void) {
             MatrixTransform::rotateY(rotate, rotation);
             MatrixTransform::multiply(rotate, scale, modelMatrix);
 
-            // MatrixTransform::translate(modelMatrix, translation * 2, translation, 0.0f);
+            MatrixTransform::translate(modelMatrix, translation * 2, translation, 0.0f);
 
             MatrixTransform::loadIdentity(projectionMatrix);
             MatrixTransform::perspective(projectionMatrix, fov, aspect, near, far);
