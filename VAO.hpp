@@ -5,9 +5,28 @@
 // Vertex array object
 class VAO {
 public:
-	VAO();
-	GLuint getVAO() const;
+	GLuint _vao; // move in private
+
+	VAO() {
+		glGenVertexArrays(1, &_vao);
+        glBindVertexArray(_vao);
+	}
+
+	void linkAttrib() {
+        // position attribute
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+	}
+
+	void unbind() {
+        glBindBuffer(GL_ARRAY_BUFFER, 0); // unbind the object
+        glBindVertexArray(0);
+	}
+
+	void deleteVAO() {
+		glDeleteVertexArrays(1, &_vao);
+	}
+	// GLuint getVAO() const;
 
 private:
-	GLuint _vao;
 };

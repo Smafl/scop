@@ -49,3 +49,7 @@ ShaderProgram::ShaderProgram(vector<GLuint> &shaders)
 GLuint ShaderProgram::getShaderProgram() const {
 	return _shaderProgram;
 }
+
+void ShaderProgram::deleteShaderProgram() {
+	glDeleteProgram(_shaderProgram);
+}

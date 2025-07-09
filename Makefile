@@ -25,6 +25,7 @@ endif
 
 SRC =	main.cpp\
 		gl.cpp\
+		RenderModel.cpp\
 		Shader.cpp\
 		ShaderProgram.cpp\
 		MatrixTransform.cpp

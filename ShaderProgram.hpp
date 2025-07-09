@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <exception>
 #include <glad/gl.h>
 
 class ShaderProgramException : public std::exception {
@@ -21,6 +22,7 @@ class ShaderProgram {
 public:
 	explicit ShaderProgram(std::vector<GLuint> &shaders);
 	GLuint getShaderProgram() const;
+	void deleteShaderProgram();
 
 private:
 	GLuint _shaderProgram;
