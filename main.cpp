@@ -3,6 +3,7 @@
 #include <vector>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
+#include "Window.hpp"
 #include "RenderModel.hpp"
 #include "Shader.hpp"
 #include "ShaderProgram.hpp"
@@ -28,52 +29,23 @@ void printMatrix(GLfloat *matrix) {
     cout << endl;
 }
 
-int terminateWindow(GLFWwindow* window) {
-    if (window) {
-        glfwDestroyWindow(window);
-    }
-    glfwTerminate();
-    return EXIT_FAILURE;
-}
+int main(int args, char* argv[]) {
 
-int main(void) {
-    GLFWwindow* window;
-    const unsigned int width = 640;
-    const unsigned int height = 480;
+    if (args < 2) {
+        cerr << "No object file given" << endl;
+        return EXIT_FAILURE;
+    }
+
+    Window windowInstance;
 
     try {
-        // Initialize the library
-        if (!glfwInit()) {
-            throw runtime_error("Cannot initialize GLFW");
-        }
-
-        // Use version 4.1 (last available on MacOS)
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
-        // Create a GLFWindow object and its OpenGL context
-        window = glfwCreateWindow(width, height, "Hello World", NULL, NULL);
-        if (!window) {
-            glfwTerminate();
-            throw runtime_error("GLFW cannot create a window");
-        }
-
-        // Make the window's context current
-        glfwMakeContextCurrent(window);
+        GLFWwindow *window = windowInstance.getWindow();
 
         if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress)) {
             throw runtime_error("Failed to initialize GLAD");
         }
 
-        // RenderModel renderModel("../models/triangle_3d.obj");
-        // RenderModel renderModel("../models/cube.obj");
-        // RenderModel renderModel("../resources/teapot.obj");
-        // RenderModel renderModel("../resources/42.obj");
-        // RenderModel renderModel("../models/test.obj");
-        // RenderModel renderModel("../models/monkey.obj");
-        RenderModel renderModel("../models/zombie.obj");
+        RenderModel renderModel(argv[1]);
         vector<GLfloat> vertices = renderModel.getVertices();
         vector<GLuint> indices = renderModel.getIndices();
         if (vertices.empty() || indices.empty()) {
@@ -138,7 +110,7 @@ int main(void) {
 
         // the field of view
         GLfloat fov = 45.0f;
-        GLfloat aspect = (GLfloat)width / (GLfloat)height;
+        GLfloat aspect = (GLfloat)windowInstance.getScreenWidth() / (GLfloat)windowInstance.getScreenHeight();
         GLfloat near = 0.1f;
         GLfloat far = 100.0f;
 
@@ -221,8 +193,7 @@ int main(void) {
         ebo.deleteEBO();
         vbo.deleteVBO();
         shaderProgramInstance.deleteShaderProgram();
-        glfwDestroyWindow(window);
-        glfwTerminate();
+        windowInstance.terminateWindow();
 
         return 0;
 
@@ -236,9 +207,9 @@ int main(void) {
         cerr << "Matrix transformation error: " << e.what() << endl;
     } catch (const exception &e) {
         cerr << e.what() << endl;
-        return terminateWindow(window);
     } catch (...) {
         cerr << "An unknown exception occured" << endl;
-        return terminateWindow(window);
     }
+    windowInstance.terminateWindow();
+    return EXIT_FAILURE;
 }

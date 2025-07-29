@@ -29,6 +29,10 @@ RenderModel::RenderModel(const string &path) :
 		throw RenderModelException(RenderModelException::FILE_NOT_FOUND);
 	}
 
+	if (_path.find("../") == string::npos) {
+		_path = "../" + _path;
+	}
+
 	ifstream file;
 	file.open(_path);
 	if (!file.is_open()) {
@@ -85,7 +89,6 @@ const vector<GLuint> &RenderModel::getNormals() const {
 // private //
 
 array<string, 3> getTokenValues(string &token) {
-	cout << token << endl;
 	array<string, 3> tokenValues = {"", "", ""};
 
 	size_t slash = token.find('/');

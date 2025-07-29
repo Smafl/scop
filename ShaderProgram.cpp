@@ -52,4 +52,5 @@ GLuint ShaderProgram::getShaderProgram() const {
 
 void ShaderProgram::deleteShaderProgram() {
 	glDeleteProgram(_shaderProgram);
+	cout << "Shader program was deleted" << endl;
 }

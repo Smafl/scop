@@ -64,6 +64,7 @@ GLuint Shader::getShader() const {
 
 void Shader::deleteShader() {
 	glDeleteShader(_shader);
+	cout << "Shader was deleted" << endl;
 }
 
 // private //
