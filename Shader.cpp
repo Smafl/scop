@@ -58,6 +58,16 @@ Shader::Shader(const char *fileName, GLenum shaderType)
 	}
 }
 
+GLuint Shader::getShader() const {
+	return _shader;
+}
+
+void Shader::deleteShader() {
+	glDeleteShader(_shader);
+}
+
+// private //
+
 const GLenum Shader::_shaderTypes[5] = {
 	GL_VERTEX_SHADER,
 	GL_TESS_CONTROL_SHADER,
@@ -85,12 +95,4 @@ string Shader::getFileContent(const char *fileName) {
 	ostringstream content;
 	content << inputFile.rdbuf();
 	return(content.str());
-}
-
-GLuint Shader::getShader() const {
-	return _shader;
-}
-
-void Shader::deleteShader() {
-	glDeleteShader(_shader);
 }

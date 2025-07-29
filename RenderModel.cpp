@@ -1,6 +1,7 @@
 #include "RenderModel.hpp"
-#include <vector>
 #include <string>
+#include <vector>
+#include <array>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -15,6 +16,8 @@ const char *RenderModelException::what() const noexcept {
 	switch (_errorCode) {
 		case FILE_NOT_FOUND: return "File with rendering model not found";
 		case CANNOT_OPEN: return "File with rendering model cannot be opened";
+		case INVALID_FACE_FORMAT: return "Invalid face format in model file";
+		case INDEX_OUT_OF_RANGE: return "Face index value is out of allowed range";
 		default: return "An unknown error occured during rendering model creating";
 	}
 }
@@ -31,43 +34,35 @@ RenderModel::RenderModel(const string &path) :
 	if (!file.is_open()) {
 		throw RenderModelException(RenderModelException::CANNOT_OPEN);
 	}
+
 	string line;
-	string temp;
-	string temp2;
-	string temp3;
-	int indFlag = 1;
+	string type;
+	GLfloat x, y, z;
 	while (getline(file, line)) {
-		if (line[0] == 'v' && line[1] == ' ') {
-			line.erase(0, 1);
-			istringstream sline(line);
-			sline >> temp;
-			sline >> temp2;
-			sline >> temp3;
-			_vertices.push_back(stof(temp));
-			_vertices.push_back(stof(temp2));
-			_vertices.push_back(stof(temp3));
+		istringstream sline(line);
+		sline >> type;
+		if (type == "v") {
+			sline >> x >> y >> z;
+			_vertices.push_back(x);
+			_vertices.push_back(y);
+			_vertices.push_back(z);
 			_vertices.push_back(1.0);
-		} else if (line[0] == 'f' && line[1] == ' ') {
-			line.erase(0, 1);
-			istringstream sline(line);
-			sline >> temp;
-			sline >> temp2;
-			sline >> temp3;
-			if (stoul(temp) == 0 || stoul(temp) == 0 || stoul(temp) == 0) {
-				indFlag = 0;
-			}
-			_indices.push_back(stoul(temp));
-			_indices.push_back(stoul(temp2));
-			_indices.push_back(stoul(temp3));
+		} else if (type == "vn") {
+			sline >> x >> y >> z;
+			_normals.push_back(x);
+			_normals.push_back(y);
+			_normals.push_back(z);
+		} else if (type == "vt") {
+			sline >> x >> y;
+			_textures.push_back(x);
+			_textures.push_back(y);
+		} else if (type == "f") {
+			parseFaces(sline);
+		} else if (type == "g") {
+			; // to implement later
 		}
 	}
 	file.close();
-
-	if (indFlag == 1) {
-		for (auto& i : _indices) {
-			i = i - 1;
-		}
-	}
 }
 
 const vector<GLfloat> &RenderModel::getVertices() const {
@@ -76,4 +71,73 @@ const vector<GLfloat> &RenderModel::getVertices() const {
 
 const vector<GLuint> &RenderModel::getIndices() const {
 	return _indices;
+}
+
+const vector<GLuint> &RenderModel::getTextures() const {
+	return _textures;
+}
+
+const vector<GLuint> &RenderModel::getNormals() const {
+	return _normals;
+}
+
+
+// private //
+
+array<string, 3> getTokenValues(string &token) {
+	cout << token << endl;
+	array<string, 3> tokenValues = {"", "", ""};
+
+	size_t slash = token.find('/');
+	if (slash == string::npos) {
+		tokenValues[0] = token;
+		return tokenValues;
+	}
+
+	size_t slash2 = token.find('/', slash + 1);
+	tokenValues[0] = token.substr(0, slash);
+
+	if (slash2 == string::npos) {
+		tokenValues[1] = token.substr(slash + 1);
+	} else {
+		tokenValues[1] = token.substr(slash + 1, slash2 - slash - 1);
+		tokenValues[2] = token.substr(slash2 + 1);
+	}
+
+	return tokenValues;
+}
+
+void RenderModel::parseFaces(istringstream &line) {
+	vector<array<string, 3>> tokens;
+	string token;
+
+	while (line >> token) {
+		tokens.push_back(getTokenValues(token));
+	}
+
+	int tokensSize = tokens.size();
+	if (tokensSize < 3) {
+		throw RenderModelException(RenderModelException::INVALID_FACE_FORMAT);
+	}
+
+	// how many triangles: tokensSize - 2
+	for (int i = 1; i + 1 != tokensSize; i++) {
+		try {
+			_indices.push_back(stoul(tokens[0][0]) - 1);
+			_indices.push_back(stoul(tokens[i][0]) - 1);
+			_indices.push_back(stoul(tokens[i + 1][0]) - 1);
+
+			_textures.push_back(stoul(tokens[0][1]) - 1);
+			_textures.push_back(stoul(tokens[i][1]) - 1);
+			_textures.push_back(stoul(tokens[i + 1][1]) - 1);
+
+			_normals.push_back(stoul(tokens[0][2]) - 1);
+			_normals.push_back(stoul(tokens[i][2]) - 1);
+			_normals.push_back(stoul(tokens[i + 1][2]) - 1);
+    	} catch (const invalid_argument&) {
+    	    throw RenderModelException(RenderModelException::INVALID_FACE_FORMAT);
+    	} catch (const out_of_range&) {
+    	    throw RenderModelException(RenderModelException::INDEX_OUT_OF_RANGE);
+    	}
+	}
 }

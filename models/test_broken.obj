@@ -1,0 +1,27 @@
+# Irregular Pyramid with Mixed Face Vertex Counts
+
+o IrregularPyramid
+
+# Vertices
+v -1.0 0.0 -1.0   # v1 - base corner
+v  1.0 0.0 -1.0   # v2 - base corner
+v  1.0 0.0  1.0   # v3 - base corner
+v -1.0 0.0  1.0   # v4 - base corner
+v  0.0 1.5  0.0   # v5 - tip of pyramid
+v  0.5 0.5  1.0   # v6 - mid-side vertex
+v -0.5 0.5  1.0   # v7 - mid-side vertex
+
+# Base - quad
+f 1 2 3 4
+
+# Side 1 - triangle
+f 1 2 5
+
+# Side 2 - trapezoid (quad)
+f 2 3 6 5
+
+# Side 3 - pentagon (intentionally using 5 vertices)
+f 3 4 7 6 5
+
+# Side 4 - triangle
+f 4 1 5

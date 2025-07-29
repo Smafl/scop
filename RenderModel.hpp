@@ -10,6 +10,8 @@ public:
 	enum ErrorCode {
 		FILE_NOT_FOUND,
         CANNOT_OPEN,
+        INVALID_FACE_FORMAT,
+		INDEX_OUT_OF_RANGE,
 	};
 
 	explicit RenderModelException(ErrorCode err);
@@ -19,6 +21,7 @@ private:
 	ErrorCode _errorCode;
 };
 
+
 class RenderModel {
 public:
 
@@ -26,13 +29,16 @@ public:
 
     const std::vector<GLfloat> &getVertices() const;
     const std::vector<GLuint> &getIndices() const;
+    const std::vector<GLuint> &getTextures() const;
+    const std::vector<GLuint> &getNormals() const;
 
 private:
     std::vector<GLfloat> _vertices;
     std::vector<GLuint> _indices;
+    std::vector<GLuint> _textures;
+    std::vector<GLuint> _normals;
     std::string _path;
 
     RenderModel();
+    void parseFaces(std::istringstream &line);
 };
-
-// check if vertices is empty

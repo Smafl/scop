@@ -4,9 +4,9 @@ CXX = g++
 CXXFLAGS = -Wall -Werror -Wextra -DGL_SILENCE_DEPRECATION -MMD -MP
 
 ifeq ($(USER), elenakulichkova)
-CXXFLAGS += -std=c++20
+	CXXFLAGS += -std=c++20
 else
-CXXFLAGS += -std=c++2a
+	CXXFLAGS += -std=c++2a
 endif
 
 GLAD_INCLUDE = -Iinclude
@@ -19,7 +19,7 @@ LEEAKSAN_LDFLAG = -L../LeakSanitizer -llsan -lc++ -Wno-gnu-include-next -I ../Le
 GREEN = \033[0;32m
 RESET = \033[0m
 
-ifdef DEBUG
+ifeq ($(DEBUG), 1)
 	CXXFLAGS += -g -fsanitize=address
 endif
 

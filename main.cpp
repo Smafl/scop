@@ -67,8 +67,13 @@ int main(void) {
             throw runtime_error("Failed to initialize GLAD");
         }
 
-        RenderModel renderModel("../models/triangle_3d.obj");
+        // RenderModel renderModel("../models/triangle_3d.obj");
         // RenderModel renderModel("../models/cube.obj");
+        // RenderModel renderModel("../resources/teapot.obj");
+        // RenderModel renderModel("../resources/42.obj");
+        // RenderModel renderModel("../models/test.obj");
+        // RenderModel renderModel("../models/monkey.obj");
+        RenderModel renderModel("../models/zombie.obj");
         vector<GLfloat> vertices = renderModel.getVertices();
         vector<GLuint> indices = renderModel.getIndices();
         if (vertices.empty() || indices.empty()) {
@@ -124,7 +129,7 @@ int main(void) {
         // Sets the color that will be used when clearing the screen
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-        GLfloat scaleFactor = 0.25f;
+        GLfloat scaleFactor = 0.075f;
         GLfloat rotation = 0.0f;
         double prevTime = glfwGetTime();
 
