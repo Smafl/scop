@@ -16,7 +16,7 @@ const char *ShaderProgramException::what() const noexcept {
 	}
 }
 
-ShaderProgram::ShaderProgram(vector<GLuint> &shaders)
+ShaderProgram::ShaderProgram(vector<Shader> &shaders)
 {
 	if (shaders.empty()) {
 		throw ShaderProgramException(ShaderProgramException::SHADERS_NOT_FOUND);
@@ -26,7 +26,7 @@ ShaderProgram::ShaderProgram(vector<GLuint> &shaders)
 
 	_shaderProgram = glCreateProgram();
 	for (const auto &shader : shaders) {
-		glAttachShader(_shaderProgram, shader);
+		glAttachShader(_shaderProgram, shader.getShader());
 	}
 	glLinkProgram(_shaderProgram);
 

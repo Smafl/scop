@@ -98,13 +98,12 @@ int main(int args, char* argv[]) {
         // const GLubyte* version = glGetString(GL_VERSION);
         // cout << "OpenGL version: " << version << endl;
 
-        // vector<Shader> shaders;
-        vector<GLuint> shaders;
+        vector<Shader> shaders;
         Shader vertexShaderInstance("../shaders/default.vert", GL_VERTEX_SHADER);
-        shaders.push_back(vertexShaderInstance.getShader());
+        shaders.push_back(vertexShaderInstance);
 
         Shader fragmentShaderInstance("../shaders/default.frag", GL_FRAGMENT_SHADER);
-        shaders.push_back(fragmentShaderInstance.getShader());
+        shaders.push_back(fragmentShaderInstance);
 
         ShaderProgram shaderProgramInstance(shaders);
         GLuint shaderProgram = shaderProgramInstance.getShaderProgram();

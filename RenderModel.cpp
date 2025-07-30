@@ -121,17 +121,23 @@ void RenderModel::parseFaces(istringstream &line) {
 	// how many triangles: tokensSize - 2
 	for (int i = 1; i + 1 != tokensSize; i++) {
 		try {
-			_indices.push_back(stoul(tokens[0][0]) - 1);
-			_indices.push_back(stoul(tokens[i][0]) - 1);
-			_indices.push_back(stoul(tokens[i + 1][0]) - 1);
+			if ((!tokens[0][0].empty()) && (!tokens[i][0].empty()) && (!tokens[i + 1][0].empty())) {
+				_indices.push_back(stoul(tokens[0][0]) - 1);
+				_indices.push_back(stoul(tokens[i][0]) - 1);
+				_indices.push_back(stoul(tokens[i + 1][0]) - 1);
+			}
 
-			_textures.push_back(stoul(tokens[0][1]) - 1);
-			_textures.push_back(stoul(tokens[i][1]) - 1);
-			_textures.push_back(stoul(tokens[i + 1][1]) - 1);
+			if ((!tokens[0][1].empty()) && (!tokens[i][1].empty()) && (!tokens[i + 1][1].empty())) {
+				_textures.push_back(stoul(tokens[0][1]) - 1);
+				_textures.push_back(stoul(tokens[i][1]) - 1);
+				_textures.push_back(stoul(tokens[i + 1][1]) - 1);
+			}
 
-			_normals.push_back(stoul(tokens[0][2]) - 1);
-			_normals.push_back(stoul(tokens[i][2]) - 1);
-			_normals.push_back(stoul(tokens[i + 1][2]) - 1);
+			if ((!tokens[0][2].empty()) && (!tokens[i][2].empty()) && (!tokens[i + 1][2].empty())) {
+				_normals.push_back(stoul(tokens[0][2]) - 1);
+				_normals.push_back(stoul(tokens[i][2]) - 1);
+				_normals.push_back(stoul(tokens[i + 1][2]) - 1);
+			}
     	} catch (const invalid_argument&) {
     	    throw RenderModelException(RenderModelException::INVALID_FACE_FORMAT);
     	} catch (const out_of_range&) {

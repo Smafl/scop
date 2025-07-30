@@ -3,6 +3,7 @@
 #include <vector>
 #include <exception>
 #include <glad/gl.h>
+#include "Shader.hpp"
 
 class ShaderProgramException : public std::exception {
 public:
@@ -20,7 +21,7 @@ private:
 
 class ShaderProgram {
 public:
-	explicit ShaderProgram(std::vector<GLuint> &shaders);
+	explicit ShaderProgram(std::vector<Shader> &shaders);
 	GLuint getShaderProgram() const;
 	void deleteShaderProgram();
 
