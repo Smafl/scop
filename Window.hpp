@@ -21,21 +21,21 @@ private:
 
 class Window {
 public:
-	Window();
-	Window(const char *name);
 	Window(const int width, const int height, const char *name);
 
 	GLFWwindow* getWindow() const;
 	int getScreenWidth() const;
 	int getScreenHeight() const;
-	void terminateWindow();
+	~Window();
 
 private:
 	GLFWwindow* _window = nullptr;
-	int _screenWidth = 0;
-	int _screenHeight = 0;
+	int _maxWidth = 0;
+	int _maxHeight = 0;
+	int _width = 0;
+	int _height = 0;
 	const char * _windowName = nullptr;
 
-	void windowInit();
 	void getResolution();
+	Window();
 };

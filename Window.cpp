@@ -18,19 +18,7 @@ const char *WindowException::what() const noexcept {
 	}
 }
 
-Window::Window() {
-	// Initialize the library
-	if (!glfwInit()) {
-		throw WindowException(WindowException::CANNOT_INITIALIZE_GLFW);
-	}
-
-	getResolution();
-	_screenWidth /= 2;
-	_screenHeight /= 2;
-	windowInit();
-}
-
-Window::Window(const char *name)
+Window::Window(const int width, const int height, const char *name)
 	: _windowName(name)
 {
 	// Initialize the library
@@ -38,52 +26,16 @@ Window::Window(const char *name)
 		throw WindowException(WindowException::CANNOT_INITIALIZE_GLFW);
 	}
 
-	getResolution();
-	_screenWidth /= 2;
-	_screenHeight /= 2;
-	windowInit();
-}
-
-Window::Window(const int width, const int height, const char *name)
-	: _screenWidth(width), _screenHeight(height), _windowName(name)
-{
-	// Initialize the library
-	if (!glfwInit()) {
-		throw WindowException(WindowException::CANNOT_INITIALIZE_GLFW);
-	}
-	windowInit();
-}
-
-GLFWwindow *Window::getWindow() const {
-	return _window;
-}
-
-int Window::getScreenWidth() const {
-	return _screenWidth;
-}
-
-int Window::getScreenHeight() const {
-	return _screenHeight;
-}
-
-void Window::terminateWindow() {
-    if (_window) {
-        glfwDestroyWindow(_window);
-    }
-    glfwTerminate();
-	cout << "Window was terminated" << endl;
-}
-
-// private //
-
-void Window::windowInit() {
-	cout << "Creating a window..." << endl;
 	if (_windowName == nullptr || _windowName[0] == '\0') {
 		_windowName = "Hello triangle";
-		cout << "Default window name applied" << endl;
 	}
 
-	if (_screenWidth <= 0 || _screenHeight <= 0) {
+	getResolution();
+
+	_width = (width <= 0) ? (_maxWidth / 2) : width;
+	_height = (height <= 0) ? (_maxHeight / 2) : height;
+
+	if (_width <= 0 || _height <= 0) {
 		throw WindowException(WindowException::INVALID_RESOLUTION);
 	}
 
@@ -93,8 +45,10 @@ void Window::windowInit() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
+	cout << "Creating a window..." << endl;
+
 	// Create a GLFWindow object and its OpenGL context
-	_window = glfwCreateWindow(_screenWidth, _screenHeight, _windowName, NULL, NULL);
+	_window = glfwCreateWindow(_width, _height, _windowName, NULL, NULL);
 	if (!_window) {
 		glfwTerminate();
 		throw WindowException(WindowException::CANNOT_CREATE_WINDOW);
@@ -104,8 +58,30 @@ void Window::windowInit() {
 	glfwMakeContextCurrent(_window);
 }
 
+Window::~Window() {
+    if (_window) {
+        glfwDestroyWindow(_window);
+    }
+    glfwTerminate();
+	cout << "Window was terminated" << endl;
+}
+
+GLFWwindow *Window::getWindow() const {
+	return _window;
+}
+
+int Window::getScreenWidth() const {
+	return _width;
+}
+
+int Window::getScreenHeight() const {
+	return _height;
+}
+
+// private //
+
 void Window::getResolution() {
 	const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-	_screenWidth = mode->width;
-	_screenHeight = mode->height;
+	_maxWidth = mode->width;
+	_maxHeight = mode->height;
 }

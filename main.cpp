@@ -29,27 +29,49 @@ void printMatrix(GLfloat *matrix) {
     cout << endl;
 }
 
+// void parseArgv(char** argv, int *width, int *height, char *windowName) {
+//     ;
+// }
+
+void getHelp() {
+    cout << "File with a model is mandatory after executable file name" << endl;
+    cout << "Optional arguments: window width, height and name" << endl;
+    cout << endl;
+    cout << "Example 1: ./scop models/zombie.obj" << endl;
+    cout << "Example 2: ./scop models/zombie.obj 640 480" << endl;
+    cout << "Example 3: ./scop models/zombie.obj 640 480 Zombie" << endl;
+}
+
 int main(int args, char* argv[]) {
 
-    if (args < 2) {
-        cerr << "No object file given" << endl;
-        return EXIT_FAILURE;
-    }
+    int width = 0, height = 0;
+    // char *objFile = argv[1];
+    char *windowName = nullptr;
 
-    Window windowInstance;
+    if (args < 2) {
+        cerr << "No object file given. Run './scop help' to get help" << endl;
+        return EXIT_FAILURE;
+    } else if (static_cast<string>(argv[1]) == "help") {
+        getHelp();
+        return 0;
+    }
+    // } else {
+    //     parseArgv(argv, &width, &height, windowName);
+    // }
 
     try {
-        GLFWwindow *window = windowInstance.getWindow();
-
-        if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress)) {
-            throw runtime_error("Failed to initialize GLAD");
-        }
-
         RenderModel renderModel(argv[1]);
         vector<GLfloat> vertices = renderModel.getVertices();
         vector<GLuint> indices = renderModel.getIndices();
         if (vertices.empty() || indices.empty()) {
             throw runtime_error("Vertices or indices is empty");
+        }
+
+        Window windowInstance(width, height, windowName);
+        GLFWwindow *window = windowInstance.getWindow();
+
+        if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress)) {
+            throw runtime_error("Failed to initialize GLAD");
         }
         // int  i = 0;
         // for (auto v : vertices) {
@@ -72,10 +94,11 @@ int main(int args, char* argv[]) {
         // }
         // cout << endl;
 
-        // Check OpenGL version
-        const GLubyte* version = glGetString(GL_VERSION);
-        cout << "OpenGL version: " << version << endl;
+        // // Check OpenGL version
+        // const GLubyte* version = glGetString(GL_VERSION);
+        // cout << "OpenGL version: " << version << endl;
 
+        // vector<Shader> shaders;
         vector<GLuint> shaders;
         Shader vertexShaderInstance("../shaders/default.vert", GL_VERTEX_SHADER);
         shaders.push_back(vertexShaderInstance.getShader());
@@ -193,7 +216,6 @@ int main(int args, char* argv[]) {
         ebo.deleteEBO();
         vbo.deleteVBO();
         shaderProgramInstance.deleteShaderProgram();
-        windowInstance.terminateWindow();
 
         return 0;
 
@@ -210,6 +232,5 @@ int main(int args, char* argv[]) {
     } catch (...) {
         cerr << "An unknown exception occured" << endl;
     }
-    windowInstance.terminateWindow();
     return EXIT_FAILURE;
 }

@@ -29,18 +29,13 @@ RenderModel::RenderModel(const string &path) :
 		throw RenderModelException(RenderModelException::FILE_NOT_FOUND);
 	}
 
-	if (_path.find("../") == string::npos) {
-		_path = "../" + _path;
-	}
-
 	ifstream file;
 	file.open(_path);
 	if (!file.is_open()) {
 		throw RenderModelException(RenderModelException::CANNOT_OPEN);
 	}
 
-	string line;
-	string type;
+	string line, type;
 	GLfloat x, y, z;
 	while (getline(file, line)) {
 		istringstream sline(line);
