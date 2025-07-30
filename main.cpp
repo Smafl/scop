@@ -7,10 +7,8 @@
 #include "RenderModel.hpp"
 #include "Shader.hpp"
 #include "ShaderProgram.hpp"
+#include "Renderer.hpp"
 #include "MatrixTransform.hpp"
-#include "VAO.hpp"
-#include "VBO.hpp"
-#include "EBO.hpp"
 #include <iomanip>  // For std::setw and formatting
 
 using namespace std;
@@ -40,6 +38,29 @@ void getHelp() {
     cout << "Example 1: ./scop models/zombie.obj" << endl;
     cout << "Example 2: ./scop models/zombie.obj 640 480" << endl;
     cout << "Example 3: ./scop models/zombie.obj 640 480 Zombie" << endl;
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    (void)scancode;
+    (void)mods;
+
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GL_TRUE);
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    (void)window;
+    (void)mods;
+
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+        ;
+    }
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    (void)window;
+    (void)xoffset;
+    (void)yoffset;
 }
 
 int main(int args, char* argv[]) {
@@ -105,23 +126,13 @@ int main(int args, char* argv[]) {
         Shader fragmentShaderInstance("../shaders/default.frag", GL_FRAGMENT_SHADER);
         shaders.push_back(fragmentShaderInstance);
 
-        ShaderProgram shaderProgramInstance(shaders);
-        GLuint shaderProgram = shaderProgramInstance.getShaderProgram();
+        ShaderProgram shaderProgram(shaders);
 
+        // can be moved in destructor if no more shader manipulations
         vertexShaderInstance.deleteShader();
         fragmentShaderInstance.deleteShader();
 
-        // Vertex array and vertex buffer object (order matters)
-
-        VAO vao;
-        VBO vbo(vertices);
-        EBO ebo(indices);
-
-        vao.linkAttrib();
-        vao.unbind();
-
-        // Sets the color that will be used when clearing the screen
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        Renderer renderer(vertices, indices, shaderProgram);
 
         GLfloat scaleFactor = 0.075f;
         GLfloat rotation = 0.0f;
@@ -145,14 +156,17 @@ int main(int args, char* argv[]) {
         // glCullFace(GL_BACK);
 
         // Loop until the user closes the window
+        glfwSetKeyCallback(window, key_callback);
+        glfwSetMouseButtonCallback(window, mouse_button_callback);
+        glfwSetScrollCallback(window, scroll_callback);
         // int printMatrixCounter = 0;
-        while (!glfwWindowShouldClose(window)) {
+        while (!windowInstance.shouldCloseWindow()) {
             // Render here
 
             // Crears the screen
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            glUseProgram(shaderProgram);
+            glUseProgram(shaderProgram.getShaderProgram());
 
             double currentTime = glfwGetTime();
             if (currentTime - prevTime >= 1 / 60) {
@@ -185,25 +199,25 @@ int main(int args, char* argv[]) {
             //     printMatrixCounter = 1;
             // }
 
-            int modelMatrixLoc = glGetUniformLocation(shaderProgram, "modelMatrix");
+            int modelMatrixLoc = glGetUniformLocation(shaderProgram.getShaderProgram(), "modelMatrix");
             if (modelMatrixLoc == -1) {
                 throw runtime_error("Error getting uniform location of model matrix");
             }
             glUniformMatrix4fv(modelMatrixLoc, 1, GL_TRUE, modelMatrix);
 
-            // int viewMatrixLoc = glGetUniformLocation(shaderProgram, "viewMatrix");
+            // int viewMatrixLoc = glGetUniformLocation(shaderProgram.getShaderProgram(), "viewMatrix");
             // glUniformMatrix4fv(viewMatrixLoc, 1, GL_TRUE, viewMatrix);
-            int projectionMatrixLoc = glGetUniformLocation(shaderProgram, "projectionMatrix");
+            int projectionMatrixLoc = glGetUniformLocation(shaderProgram.getShaderProgram(), "projectionMatrix");
             if (projectionMatrixLoc == -1) {
                 throw runtime_error("Error getting uniform location of projection matrix");
             }
             glUniformMatrix4fv(projectionMatrixLoc, 1, GL_TRUE, projectionMatrix);
 
-            glBindVertexArray(vao._vao);
+            glBindVertexArray(renderer.getVAO().getVAO());
             glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
 
             // Swap front and back buffers
-            glfwSwapBuffers(window);
+            windowInstance.swapBuffers();
 
             // Poll for and process events
             glfwPollEvents();
@@ -211,10 +225,7 @@ int main(int args, char* argv[]) {
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-        vao.deleteVAO();
-        ebo.deleteEBO();
-        vbo.deleteVBO();
-        shaderProgramInstance.deleteShaderProgram();
+        renderer.cleanUp();
 
         return 0;
 

@@ -3,11 +3,9 @@
 #include <glad/gl.h>
 #include <vector>
 
-// Vertex array object
+// Element array buffer object
 class EBO {
 public:
-	GLuint _ebo; // move in private
-
 	explicit EBO(std::vector<GLuint> indices) {
 		glGenBuffers(1, &_ebo);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
@@ -17,8 +15,13 @@ public:
 	void deleteEBO() {
 		glDeleteBuffers(1, &_ebo);
 	}
-	// GLuint getEBO() const;
+
+	GLuint getEBO() const {
+		return _ebo;
+	}
 
 private:
+	GLuint _ebo;
+
 	EBO();
 };

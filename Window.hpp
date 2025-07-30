@@ -26,6 +26,10 @@ public:
 	GLFWwindow* getWindow() const;
 	int getScreenWidth() const;
 	int getScreenHeight() const;
+
+	bool shouldCloseWindow() const;
+	void swapBuffers() const;
+
 	~Window();
 
 private:

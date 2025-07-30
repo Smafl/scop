@@ -29,6 +29,7 @@ SRC =	main.cpp\
 		RenderModel.cpp\
 		Shader.cpp\
 		ShaderProgram.cpp\
+		Renderer.cpp\
 		MatrixTransform.cpp
 
 OBJ_DIR = obj

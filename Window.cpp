@@ -58,13 +58,7 @@ Window::Window(const int width, const int height, const char *name)
 	glfwMakeContextCurrent(_window);
 }
 
-Window::~Window() {
-    if (_window) {
-        glfwDestroyWindow(_window);
-    }
-    glfwTerminate();
-	cout << "Window was terminated" << endl;
-}
+// getters //
 
 GLFWwindow *Window::getWindow() const {
 	return _window;
@@ -76,6 +70,25 @@ int Window::getScreenWidth() const {
 
 int Window::getScreenHeight() const {
 	return _height;
+}
+
+// other //
+
+bool Window::shouldCloseWindow() const {
+	return glfwWindowShouldClose(_window);
+}
+
+void Window::swapBuffers() const {
+	// Swap front and back buffers
+	glfwSwapBuffers(_window);
+}
+
+Window::~Window() {
+	if (_window) {
+		glfwDestroyWindow(_window);
+	}
+	glfwTerminate();
+	cout << "Window was terminated" << endl;
 }
 
 // private //

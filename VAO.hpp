@@ -5,8 +5,6 @@
 // Vertex array object
 class VAO {
 public:
-	GLuint _vao; // move in private
-
 	VAO() {
 		glGenVertexArrays(1, &_vao);
         glBindVertexArray(_vao);
@@ -26,7 +24,11 @@ public:
 	void deleteVAO() {
 		glDeleteVertexArrays(1, &_vao);
 	}
-	// GLuint getVAO() const;
+
+	GLuint getVAO() const {
+		return _vao;
+	}
 
 private:
+	GLuint _vao;
 };
