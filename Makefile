@@ -26,6 +26,7 @@ endif
 SRC =	main.cpp\
 		gl.cpp\
 		Window.cpp\
+		InputListener.cpp\
 		RenderModel.cpp\
 		Shader.cpp\
 		ShaderProgram.cpp\

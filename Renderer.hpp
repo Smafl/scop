@@ -27,10 +27,10 @@ public:
 	explicit Renderer(std::vector<GLfloat> &vertices, std::vector<GLuint> &indices, ShaderProgram &shaderProgram);
 
 	VAO getVAO() const;
-
+	void glSettings();
 	void cleanUp();
 
-	private:
+private:
 	VAO _vao;
 	EBO _ebo;
 	VBO _vbo;

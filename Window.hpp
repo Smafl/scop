@@ -3,6 +3,7 @@
 #include <exception>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
+// #include "InputListener.hpp"
 
 class WindowException : public std::exception {
 public:
@@ -34,10 +35,8 @@ public:
 
 private:
 	GLFWwindow* _window = nullptr;
-	int _maxWidth = 0;
-	int _maxHeight = 0;
-	int _width = 0;
-	int _height = 0;
+	int _maxWidth = 0, _maxHeight = 0;
+	int _width = 0, _height = 0;
 	const char * _windowName = nullptr;
 
 	void getResolution();

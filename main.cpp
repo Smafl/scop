@@ -9,23 +9,12 @@
 #include "ShaderProgram.hpp"
 #include "Renderer.hpp"
 #include "MatrixTransform.hpp"
-#include <iomanip>  // For std::setw and formatting
+#include "InputListener.hpp"
 
 using namespace std;
 
-void printMatrix(GLfloat *matrix) {
-    // cout << fixed << setprecision(4);
-    int i = 0;
-    for (int iter = 0; iter < 16; iter++) {
-        cout << matrix[iter] << "\t";
-        i++;
-        if (i == 4) {
-            cout << endl;
-            i = 0;
-        }
-    }
-    cout << endl;
-}
+GLfloat scaleFactor = 0.075f;
+double prevTime = glfwGetTime();
 
 // void parseArgv(char** argv, int *width, int *height, char *windowName) {
 //     ;
@@ -38,29 +27,6 @@ void getHelp() {
     cout << "Example 1: ./scop models/zombie.obj" << endl;
     cout << "Example 2: ./scop models/zombie.obj 640 480" << endl;
     cout << "Example 3: ./scop models/zombie.obj 640 480 Zombie" << endl;
-}
-
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    (void)scancode;
-    (void)mods;
-
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GL_TRUE);
-}
-
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-    (void)window;
-    (void)mods;
-
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
-        ;
-    }
-}
-
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    (void)window;
-    (void)xoffset;
-    (void)yoffset;
 }
 
 int main(int args, char* argv[]) {
@@ -84,9 +50,6 @@ int main(int args, char* argv[]) {
         RenderModel renderModel(argv[1]);
         vector<GLfloat> vertices = renderModel.getVertices();
         vector<GLuint> indices = renderModel.getIndices();
-        if (vertices.empty() || indices.empty()) {
-            throw runtime_error("Vertices or indices is empty");
-        }
 
         Window windowInstance(width, height, windowName);
         GLFWwindow *window = windowInstance.getWindow();
@@ -94,26 +57,6 @@ int main(int args, char* argv[]) {
         if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress)) {
             throw runtime_error("Failed to initialize GLAD");
         }
-        // int  i = 0;
-        // for (auto v : vertices) {
-        //     cout << v << " ";
-        //     i++;
-        //     if (i == 4) {
-        //         cout << endl;
-        //         i = 0;
-        //     }
-        // }
-        // cout << endl;
-        // i = 0;
-        // for (auto ind : indices) {
-        //     cout << ind << " ";
-        //     i++;
-        //     if (i == 3) {
-        //         cout << endl;
-        //         i = 0;
-        //     }
-        // }
-        // cout << endl;
 
         // // Check OpenGL version
         // const GLubyte* version = glGetString(GL_VERSION);
@@ -134,32 +77,21 @@ int main(int args, char* argv[]) {
 
         Renderer renderer(vertices, indices, shaderProgram);
 
-        GLfloat scaleFactor = 0.075f;
-        GLfloat rotation = 0.0f;
-        double prevTime = glfwGetTime();
-
-        GLfloat translation = 0.0f;
-        GLfloat delta = 0.00025f;
-
         // the field of view
         GLfloat fov = 45.0f;
         GLfloat aspect = (GLfloat)windowInstance.getScreenWidth() / (GLfloat)windowInstance.getScreenHeight();
         GLfloat near = 0.1f;
         GLfloat far = 100.0f;
 
-        // the depth value for every pixel
-        // when enabled: performing the depth test
-        glEnable(GL_DEPTH_TEST);
+        // Set user pointer for callback access
+        glfwSetWindowUserPointer(window, &renderModel);
 
-        // glEnable(GL_CULL_FACE);
-        // glFrontFace(GL_CW);
-        // glCullFace(GL_BACK);
+	    // Set input callback
+	    glfwSetKeyCallback(window, InputListener::key_callback);
+	    // glfwSetMouseButtonCallback(window, mouse_button_callback);
+	    glfwSetScrollCallback(window, InputListener::scroll_callback);
 
         // Loop until the user closes the window
-        glfwSetKeyCallback(window, key_callback);
-        glfwSetMouseButtonCallback(window, mouse_button_callback);
-        glfwSetScrollCallback(window, scroll_callback);
-        // int printMatrixCounter = 0;
         while (!windowInstance.shouldCloseWindow()) {
             // Render here
 
@@ -168,15 +100,12 @@ int main(int args, char* argv[]) {
 
             glUseProgram(shaderProgram.getShaderProgram());
 
-            double currentTime = glfwGetTime();
-            if (currentTime - prevTime >= 1 / 60) {
-                rotation += 0.25f;
-                prevTime = currentTime;
-            }
-
-            translation += delta;
-            if (translation >= 0.25f || translation <= -0.25f) {
-                delta *= -1.0f;
+            if (renderModel.isRotate) {
+                double currentTime = glfwGetTime();
+                if (currentTime - prevTime >= 1 / 60) {
+                    renderModel.rotation += 0.25f;
+                    prevTime = currentTime;
+                }
             }
 
             GLfloat modelMatrix[16], projectionMatrix[16];
@@ -186,18 +115,13 @@ int main(int args, char* argv[]) {
             MatrixTransform::scale(scale, scaleFactor);
 
             MatrixTransform::loadIdentity(rotate);
-            MatrixTransform::rotateY(rotate, rotation);
+            MatrixTransform::rotateY(rotate, renderModel.rotation);
             MatrixTransform::multiply(rotate, scale, modelMatrix);
 
-            MatrixTransform::translate(modelMatrix, translation * 2, translation, 0.0f);
+            MatrixTransform::translate(modelMatrix, renderModel.translationX, renderModel.translationY, renderModel.translationZ);
 
             MatrixTransform::loadIdentity(projectionMatrix);
             MatrixTransform::perspective(projectionMatrix, fov, aspect, near, far);
-
-            // if (printMatrixCounter == 0) {
-            //     printMatrix(modelMatrix);
-            //     printMatrixCounter = 1;
-            // }
 
             int modelMatrixLoc = glGetUniformLocation(shaderProgram.getShaderProgram(), "modelMatrix");
             if (modelMatrixLoc == -1) {
@@ -223,10 +147,7 @@ int main(int args, char* argv[]) {
             glfwPollEvents();
         }
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
         renderer.cleanUp();
-
         return 0;
 
     } catch (const RenderModelException &e) {

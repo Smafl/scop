@@ -28,7 +28,4 @@ public:
 	static void loadIdentity(GLfloat *matrix);
 	static void multiply(GLfloat *m1, GLfloat *m2, GLfloat *result);
 	static GLfloat degreesToRadians(GLfloat degrees);
-
-private:
-
 };

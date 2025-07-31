@@ -12,6 +12,7 @@ public:
         CANNOT_OPEN,
         INVALID_FACE_FORMAT,
 		INDEX_OUT_OF_RANGE,
+        UNKNOWN_ERROR,
 	};
 
 	explicit RenderModelException(ErrorCode err);
@@ -24,6 +25,14 @@ private:
 
 class RenderModel {
 public:
+    GLfloat translationX = 0.0f;
+    GLfloat translationY = 0.0f;
+    GLfloat translationZ = 0.0f;
+    GLfloat delta = 0.05f;
+    GLfloat rotation = 0.0f;
+    bool isRotate = true;
+    GLfloat minZ = -5.0f;
+    GLfloat maxZ = 0.5f;
 
     explicit RenderModel(const std::string &path);
 
@@ -39,6 +48,6 @@ private:
     std::vector<GLuint> _normals;
     std::string _path;
 
-    RenderModel();
     void parseFaces(std::istringstream &line);
+    RenderModel();
 };

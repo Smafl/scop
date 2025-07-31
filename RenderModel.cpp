@@ -18,7 +18,8 @@ const char *RenderModelException::what() const noexcept {
 		case CANNOT_OPEN: return "File with rendering model cannot be opened";
 		case INVALID_FACE_FORMAT: return "Invalid face format in model file";
 		case INDEX_OUT_OF_RANGE: return "Face index value is out of allowed range";
-		default: return "An unknown error occured during rendering model creating";
+		case UNKNOWN_ERROR: return "Failed to parse a model file";
+		default: return "An unknown error occurred during rendering model creating";
 	}
 }
 
@@ -57,11 +58,19 @@ RenderModel::RenderModel(const string &path) :
 			_textures.push_back(y);
 		} else if (type == "f") {
 			parseFaces(sline);
+		} else if (type == "o") {
+			; // implement later
 		} else if (type == "g") {
+			; // to implement later
+		} else if (type == "usemtl") {
 			; // to implement later
 		}
 	}
 	file.close();
+
+	if (_vertices.empty() || _indices.empty()) {
+		throw RenderModelException(RenderModelException::UNKNOWN_ERROR);
+	}
 }
 
 const vector<GLfloat> &RenderModel::getVertices() const {
