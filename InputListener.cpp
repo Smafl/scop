@@ -44,6 +44,23 @@ namespace InputListener {
 	    }
 	}
 
+	void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+		RenderModel* model = static_cast<RenderModel*>(glfwGetWindowUserPointer(window));
+		if (!model) return;
+		(void)window;
+		(void)mods;
+
+		// MacOS trackpad -- one finger click
+		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+			;
+		}
+
+		// MacOS trackpad -- two fingers click
+		if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+			;
+		}
+	}
+
 	void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 		RenderModel* model = static_cast<RenderModel*>(glfwGetWindowUserPointer(window));
 		if (!model) return;

@@ -13,7 +13,6 @@
 
 using namespace std;
 
-GLfloat scaleFactor = 0.075f;
 double prevTime = glfwGetTime();
 
 // void parseArgv(char** argv, int *width, int *height, char *windowName) {
@@ -49,7 +48,7 @@ int main(int args, char* argv[]) {
     try {
         RenderModel renderModel(argv[1]);
         vector<GLfloat> vertices = renderModel.getVertices();
-        vector<GLuint> indices = renderModel.getIndices();
+        vector<GLuint> indices = renderModel.getVIndices();
 
         Window windowInstance(width, height, windowName);
         GLFWwindow *window = windowInstance.getWindow();
@@ -88,7 +87,7 @@ int main(int args, char* argv[]) {
 
 	    // Set input callback
 	    glfwSetKeyCallback(window, InputListener::key_callback);
-	    // glfwSetMouseButtonCallback(window, mouse_button_callback);
+	    glfwSetMouseButtonCallback(window, InputListener::mouse_button_callback);
 	    glfwSetScrollCallback(window, InputListener::scroll_callback);
 
         // Loop until the user closes the window
@@ -112,7 +111,7 @@ int main(int args, char* argv[]) {
             GLfloat scale[16], rotate[16];
 
             MatrixTransform::loadIdentity(scale);
-            MatrixTransform::scale(scale, scaleFactor);
+            MatrixTransform::scale(scale, renderModel.scaleFactor);
 
             MatrixTransform::loadIdentity(rotate);
             MatrixTransform::rotateY(rotate, renderModel.rotation);

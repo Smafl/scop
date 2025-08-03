@@ -19,7 +19,7 @@ const char *RenderModelException::what() const noexcept {
 		case INVALID_FACE_FORMAT: return "Invalid face format in model file";
 		case INDEX_OUT_OF_RANGE: return "Face index value is out of allowed range";
 		case UNKNOWN_ERROR: return "Failed to parse a model file";
-		default: return "An unknown error occurred during rendering model creating";
+		default: return "An unknown error occurred during creating a render model";
 	}
 }
 
@@ -47,15 +47,15 @@ RenderModel::RenderModel(const string &path) :
 			_vertices.push_back(y);
 			_vertices.push_back(z);
 			_vertices.push_back(1.0);
+		} else if (type == "vt") {
+			sline >> x >> y;
+			_texture.push_back(x);
+			_texture.push_back(y);
 		} else if (type == "vn") {
 			sline >> x >> y >> z;
 			_normals.push_back(x);
 			_normals.push_back(y);
 			_normals.push_back(z);
-		} else if (type == "vt") {
-			sline >> x >> y;
-			_textures.push_back(x);
-			_textures.push_back(y);
 		} else if (type == "f") {
 			parseFaces(sline);
 		} else if (type == "o") {
@@ -68,7 +68,7 @@ RenderModel::RenderModel(const string &path) :
 	}
 	file.close();
 
-	if (_vertices.empty() || _indices.empty()) {
+	if (_vertices.empty() || _vIndices.empty()) {
 		throw RenderModelException(RenderModelException::UNKNOWN_ERROR);
 	}
 }
@@ -77,18 +77,25 @@ const vector<GLfloat> &RenderModel::getVertices() const {
 	return _vertices;
 }
 
-const vector<GLuint> &RenderModel::getIndices() const {
-	return _indices;
-}
-
 const vector<GLuint> &RenderModel::getTextures() const {
-	return _textures;
+	return _texture;
 }
 
 const vector<GLuint> &RenderModel::getNormals() const {
 	return _normals;
 }
 
+const vector<GLuint> &RenderModel::getVIndices() const {
+	return _vIndices;
+}
+
+const vector<GLuint> &RenderModel::getVtIndices() const {
+	return _vtIndices;
+}
+
+const vector<GLuint> &RenderModel::getVnIndices() const {
+	return _vnIndices;
+}
 
 // private //
 
@@ -131,21 +138,21 @@ void RenderModel::parseFaces(istringstream &line) {
 	for (int i = 1; i + 1 != tokensSize; i++) {
 		try {
 			if ((!tokens[0][0].empty()) && (!tokens[i][0].empty()) && (!tokens[i + 1][0].empty())) {
-				_indices.push_back(stoul(tokens[0][0]) - 1);
-				_indices.push_back(stoul(tokens[i][0]) - 1);
-				_indices.push_back(stoul(tokens[i + 1][0]) - 1);
+				_vIndices.push_back(stoul(tokens[0][0]) - 1);
+				_vIndices.push_back(stoul(tokens[i][0]) - 1);
+				_vIndices.push_back(stoul(tokens[i + 1][0]) - 1);
 			}
 
 			if ((!tokens[0][1].empty()) && (!tokens[i][1].empty()) && (!tokens[i + 1][1].empty())) {
-				_textures.push_back(stoul(tokens[0][1]) - 1);
-				_textures.push_back(stoul(tokens[i][1]) - 1);
-				_textures.push_back(stoul(tokens[i + 1][1]) - 1);
+				_vtIndices.push_back(stoul(tokens[0][1]) - 1);
+				_vtIndices.push_back(stoul(tokens[i][1]) - 1);
+				_vtIndices.push_back(stoul(tokens[i + 1][1]) - 1);
 			}
 
 			if ((!tokens[0][2].empty()) && (!tokens[i][2].empty()) && (!tokens[i + 1][2].empty())) {
-				_normals.push_back(stoul(tokens[0][2]) - 1);
-				_normals.push_back(stoul(tokens[i][2]) - 1);
-				_normals.push_back(stoul(tokens[i + 1][2]) - 1);
+				_vnIndices.push_back(stoul(tokens[0][2]) - 1);
+				_vnIndices.push_back(stoul(tokens[i][2]) - 1);
+				_vnIndices.push_back(stoul(tokens[i + 1][2]) - 1);
 			}
     	} catch (const invalid_argument&) {
     	    throw RenderModelException(RenderModelException::INVALID_FACE_FORMAT);

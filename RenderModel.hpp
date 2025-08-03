@@ -30,22 +30,30 @@ public:
     GLfloat translationZ = 0.0f;
     GLfloat delta = 0.05f;
     GLfloat rotation = 0.0f;
-    bool isRotate = true;
+    bool isRotate = false;
     GLfloat minZ = -5.0f;
     GLfloat maxZ = 0.5f;
+    GLfloat scaleFactor = 0.075f;
 
     explicit RenderModel(const std::string &path);
 
     const std::vector<GLfloat> &getVertices() const;
-    const std::vector<GLuint> &getIndices() const;
     const std::vector<GLuint> &getTextures() const;
     const std::vector<GLuint> &getNormals() const;
 
+    const std::vector<GLuint> &getVIndices() const;
+    const std::vector<GLuint> &getVtIndices() const;
+    const std::vector<GLuint> &getVnIndices() const;
+
 private:
     std::vector<GLfloat> _vertices;
-    std::vector<GLuint> _indices;
-    std::vector<GLuint> _textures;
+    std::vector<GLuint> _texture;
     std::vector<GLuint> _normals;
+
+    std::vector<GLuint> _vIndices;
+    std::vector<GLuint> _vtIndices;
+    std::vector<GLuint> _vnIndices;
+
     std::string _path;
 
     void parseFaces(std::istringstream &line);
