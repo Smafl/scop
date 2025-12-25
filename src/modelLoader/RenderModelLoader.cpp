@@ -1,4 +1,4 @@
-#include "RenderModel.hpp"
+#include "RenderModelLoader.hpp"
 #include <string>
 #include <vector>
 #include <array>
@@ -9,10 +9,10 @@
 
 using namespace std;
 
-RenderModelException::RenderModelException(ErrorCode err)
+RenderModelLoaderException::RenderModelLoaderException(ErrorCode err)
 	: _errorCode(err) {}
 
-const char *RenderModelException::what() const noexcept {
+const char *RenderModelLoaderException::what() const noexcept {
 	switch (_errorCode) {
 		case FILE_NOT_FOUND: return "File with rendering model not found";
 		case CANNOT_OPEN: return "File with rendering model cannot be opened";
@@ -23,17 +23,23 @@ const char *RenderModelException::what() const noexcept {
 	}
 }
 
-RenderModel::RenderModel(const string &path) :
+
+/**
+* @brief Loads and parses an OBJ file.
+* @param path Path to the OBJ file.
+* @throws RenderModelLoaderException on file or parsing errors.
+*/
+RenderModelLoader::RenderModelLoader(const string &path) :
 	_path(path)
 {
 	if (_path.empty()) {
-		throw RenderModelException(RenderModelException::FILE_NOT_FOUND);
+		throw RenderModelLoaderException(RenderModelLoaderException::FILE_NOT_FOUND);
 	}
 
 	ifstream file;
 	file.open(_path);
 	if (!file.is_open()) {
-		throw RenderModelException(RenderModelException::CANNOT_OPEN);
+		throw RenderModelLoaderException(RenderModelLoaderException::CANNOT_OPEN);
 	}
 
 	string line, type;
@@ -69,31 +75,31 @@ RenderModel::RenderModel(const string &path) :
 	file.close();
 
 	if (_vertices.empty() || _vIndices.empty()) {
-		throw RenderModelException(RenderModelException::UNKNOWN_ERROR);
+		throw RenderModelLoaderException(RenderModelLoaderException::UNKNOWN_ERROR);
 	}
 }
 
-const vector<GLfloat> &RenderModel::getVertices() const {
+const vector<GLfloat> &RenderModelLoader::getVertices() const {
 	return _vertices;
 }
 
-const vector<GLuint> &RenderModel::getTextures() const {
+const vector<GLuint> &RenderModelLoader::getTextures() const {
 	return _texture;
 }
 
-const vector<GLuint> &RenderModel::getNormals() const {
+const vector<GLuint> &RenderModelLoader::getNormals() const {
 	return _normals;
 }
 
-const vector<GLuint> &RenderModel::getVIndices() const {
+const vector<GLuint> &RenderModelLoader::getVIndices() const {
 	return _vIndices;
 }
 
-const vector<GLuint> &RenderModel::getVtIndices() const {
+const vector<GLuint> &RenderModelLoader::getVtIndices() const {
 	return _vtIndices;
 }
 
-const vector<GLuint> &RenderModel::getVnIndices() const {
+const vector<GLuint> &RenderModelLoader::getVnIndices() const {
 	return _vnIndices;
 }
 
@@ -121,7 +127,22 @@ array<string, 3> getTokenValues(string &token) {
 	return tokenValues;
 }
 
-void RenderModel::parseFaces(istringstream &line) {
+/**
+* @brief Parses a face definition and generates triangle indices.
+*
+* Supports face formats:
+*  - v
+*  - v/vt
+*  - v//vn
+*  - v/vt/vn
+*
+* Polygons with more than three vertices are triangulated
+* using a triangle fan method.
+*
+* @param line Input stream containing face tokens.
+* @throws RenderModelLoaderException on invalid format or index errors.
+*/
+void RenderModelLoader::parseFaces(istringstream &line) {
 	vector<array<string, 3>> tokens;
 	string token;
 
@@ -131,7 +152,7 @@ void RenderModel::parseFaces(istringstream &line) {
 
 	int tokensSize = tokens.size();
 	if (tokensSize < 3) {
-		throw RenderModelException(RenderModelException::INVALID_FACE_FORMAT);
+		throw RenderModelLoaderException(RenderModelLoaderException::INVALID_FACE_FORMAT);
 	}
 
 	// how many triangles: tokensSize - 2
@@ -155,9 +176,9 @@ void RenderModel::parseFaces(istringstream &line) {
 				_vnIndices.push_back(stoul(tokens[i + 1][2]) - 1);
 			}
     	} catch (const invalid_argument&) {
-    	    throw RenderModelException(RenderModelException::INVALID_FACE_FORMAT);
+    	    throw RenderModelLoaderException(RenderModelLoaderException::INVALID_FACE_FORMAT);
     	} catch (const out_of_range&) {
-    	    throw RenderModelException(RenderModelException::INDEX_OUT_OF_RANGE);
+    	    throw RenderModelLoaderException(RenderModelLoaderException::INDEX_OUT_OF_RANGE);
     	}
 	}
 }

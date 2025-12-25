@@ -1,5 +1,5 @@
 #include "Window.hpp"
-#include "InputListener.hpp"
+#include "../inputHandler/InputListener.hpp"
 #include <string>
 #include <iostream>
 #include <glad/gl.h>
@@ -19,6 +19,21 @@ const char *WindowException::what() const noexcept {
 	}
 }
 
+
+/**
+* @brief Create a GLFW window with specified width, height, and title.
+*
+* Initializes GLFW, checks screen resolution, sets OpenGL hints,
+* creates a window, and makes its context current.
+*
+* If width or height <= 0, defaults to half the screen resolution.
+* If name is null or empty, defaults to "Hello triangle".
+*
+* @param width Desired window width (pixels).
+* @param height Desired window height (pixels).
+* @param name Window title.
+* @throws WindowException on GLFW init failure, invalid resolution, or window creation failure.
+*/
 Window::Window(const int width, const int height, const char *name)
 	: _windowName(name)
 {
@@ -75,15 +90,27 @@ int Window::getScreenHeight() const {
 
 // other //
 
-bool Window::shouldCloseWindow() const {
+/**
+* @brief Check if the window received a close request.
+* @return true if the window should close, false otherwise.
+*/
+bool Window::windowShouldClose() const {
 	return glfwWindowShouldClose(_window);
 }
 
+/**
+* @brief Swap the front and back buffers for double-buffered rendering.
+*/
 void Window::swapBuffers() const {
 	// Swap front and back buffers
 	glfwSwapBuffers(_window);
 }
 
+/**
+* @brief Destroy the window and terminate GLFW.
+*
+* Automatically called when the Window object goes out of scope.
+*/
 Window::~Window() {
 	if (_window) {
 		glfwDestroyWindow(_window);
@@ -94,6 +121,12 @@ Window::~Window() {
 
 // private //
 
+/**
+* @brief Detect the current screen resolution of the primary monitor.
+*
+* Sets _maxWidth and _maxHeight based on GLFW video mode.
+* Throws WindowException if resolution cannot be determined.
+*/
 void Window::getResolution() {
 	const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 	_maxWidth = mode->width;

@@ -730,7 +730,7 @@ typedef void (*GLADpostcallback)(void *ret, const char *name, GLADapiproc apipro
 #define GL_RENDERBUFFER_SAMPLES 0x8CAB
 #define GL_RENDERBUFFER_STENCIL_SIZE 0x8D55
 #define GL_RENDERBUFFER_WIDTH 0x8D42
-#define GL_RENDERER 0x1F01
+#define GL_Render 0x1F01
 #define GL_REPEAT 0x2901
 #define GL_REPLACE 0x1E01
 #define GL_RG 0x8227

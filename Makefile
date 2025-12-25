@@ -23,15 +23,16 @@ ifeq ($(DEBUG), 1)
 	CXXFLAGS += -g -fsanitize=address
 endif
 
-SRC =	main.cpp\
-		gl.cpp\
-		Window.cpp\
-		InputListener.cpp\
-		RenderModel.cpp\
-		Shader.cpp\
-		ShaderProgram.cpp\
-		Renderer.cpp\
-		MatrixTransform.cpp
+SRC =	src/main.cpp\
+		glad.cpp\
+		src/modelLoader/RenderModelLoader.cpp\
+		src/window/Window.cpp\
+		src/inputHandler/InputListener.cpp\
+		src/shaders/Shader.cpp\
+		src/shaders/ShaderProgram.cpp\
+		src/render/Render.cpp\
+		src/matrixMath/MatrixTransform.cpp\
+		src/textures/BMPLoader.cpp
 
 OBJ_DIR = obj
 

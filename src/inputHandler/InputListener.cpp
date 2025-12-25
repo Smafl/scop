@@ -1,11 +1,11 @@
 #include "InputListener.hpp"
-#include "RenderModel.hpp"
+#include "../modelLoader/RenderModelLoader.hpp"
 #include <iostream>
 
 namespace InputListener {
 
 	void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-		RenderModel* model = static_cast<RenderModel*>(glfwGetWindowUserPointer(window));
+		RenderModelLoader* model = static_cast<RenderModelLoader*>(glfwGetWindowUserPointer(window));
 		if (!model) return;
 	    (void)scancode;
 
@@ -45,7 +45,7 @@ namespace InputListener {
 	}
 
 	void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-		RenderModel* model = static_cast<RenderModel*>(glfwGetWindowUserPointer(window));
+		RenderModelLoader* model = static_cast<RenderModelLoader*>(glfwGetWindowUserPointer(window));
 		if (!model) return;
 		(void)window;
 		(void)mods;
@@ -62,7 +62,7 @@ namespace InputListener {
 	}
 
 	void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-		RenderModel* model = static_cast<RenderModel*>(glfwGetWindowUserPointer(window));
+		RenderModelLoader* model = static_cast<RenderModelLoader*>(glfwGetWindowUserPointer(window));
 		if (!model) return;
 		(void)yoffset;
 

@@ -3,13 +3,14 @@
 #include <vector>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
-#include "Window.hpp"
-#include "RenderModel.hpp"
-#include "Shader.hpp"
-#include "ShaderProgram.hpp"
-#include "Renderer.hpp"
-#include "MatrixTransform.hpp"
-#include "InputListener.hpp"
+#include "modelLoader/RenderModelLoader.hpp"
+#include "window/Window.hpp"
+#include "shaders/Shader.hpp"
+#include "shaders/ShaderProgram.hpp"
+#include "render/Render.hpp"
+#include "matrixMath/MatrixTransform.hpp"
+#include "inputHandler/InputListener.hpp"
+#include "textures/BMPLoader.hpp"
 
 using namespace std;
 
@@ -46,7 +47,7 @@ int main(int args, char* argv[]) {
     // }
 
     try {
-        RenderModel renderModel(argv[1]);
+        RenderModelLoader renderModel(argv[1]);
         vector<GLfloat> vertices = renderModel.getVertices();
         vector<GLuint> indices = renderModel.getVIndices();
 
@@ -62,10 +63,10 @@ int main(int args, char* argv[]) {
         // cout << "OpenGL version: " << version << endl;
 
         vector<Shader> shaders;
-        Shader vertexShaderInstance("../shaders/default.vert", GL_VERTEX_SHADER);
+        Shader vertexShaderInstance("../src/shaderSources/default.vert", GL_VERTEX_SHADER);
         shaders.push_back(vertexShaderInstance);
 
-        Shader fragmentShaderInstance("../shaders/default.frag", GL_FRAGMENT_SHADER);
+        Shader fragmentShaderInstance("../src/shaderSources/default.frag", GL_FRAGMENT_SHADER);
         shaders.push_back(fragmentShaderInstance);
 
         ShaderProgram shaderProgram(shaders);
@@ -74,7 +75,19 @@ int main(int args, char* argv[]) {
         vertexShaderInstance.deleteShader();
         fragmentShaderInstance.deleteShader();
 
-        Renderer renderer(vertices, indices, shaderProgram);
+        Render Render(vertices, indices, shaderProgram);
+
+        // BMPLoader bmpImage("../textures/wood_190S.bmp");
+        // GLenum format = (bmpImage.channels == 4) ? GL_RGBA : GL_RGB;
+        // glEnable(GL_TEXTURE_2D);
+        // GLuint texture;
+        // glGenTextures(1, &texture);
+
+        // glTexImage2D(GL_TEXTURE_2D, 0, format, bmpImage.getBMPHeader()->widht, bmpImage.getBMPHeader()->height, 0, format, GL_UNSIGNED_BYTE, bmpImage.getPixelData());
+        // glGenerateMipmap(GL_TEXTURE_2D);
+        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        // glBindTexture(GL_TEXTURE_2D, 0);
 
         // the field of view
         GLfloat fov = 45.0f;
@@ -91,13 +104,16 @@ int main(int args, char* argv[]) {
 	    glfwSetScrollCallback(window, InputListener::scroll_callback);
 
         // Loop until the user closes the window
-        while (!windowInstance.shouldCloseWindow()) {
+        while (!windowInstance.windowShouldClose()) {
             // Render here
 
             // Crears the screen
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             glUseProgram(shaderProgram.getShaderProgram());
+            // glActiveTexture(GL_TEXTURE0);
+            // glBindTexture(GL_TEXTURE_2D, texture);
+            // glUniform1i(glGetUniformLocation(shaderProgram.getShaderProgram(), "ourTexture"), 0);
 
             if (renderModel.isRotate) {
                 double currentTime = glfwGetTime();
@@ -136,7 +152,8 @@ int main(int args, char* argv[]) {
             }
             glUniformMatrix4fv(projectionMatrixLoc, 1, GL_TRUE, projectionMatrix);
 
-            glBindVertexArray(renderer.getVAO().getVAO());
+            // glBindTexture(GL_TEXTURE_2D, texture);
+            glBindVertexArray(Render.getVAO().getVAO());
             glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
 
             // Swap front and back buffers
@@ -146,10 +163,10 @@ int main(int args, char* argv[]) {
             glfwPollEvents();
         }
 
-        renderer.cleanUp();
+        Render.cleanUp();
         return 0;
 
-    } catch (const RenderModelException &e) {
+    } catch (const RenderModelLoaderException &e) {
         cerr << "Rendering model error: " << e.what() << endl;
     } catch (const ShaderException &e) {
         cerr << "Shader error: " << e.what() << endl;
@@ -157,6 +174,8 @@ int main(int args, char* argv[]) {
         cerr << "Shader program error: " << e.what() << endl;
     } catch (const MatrixTransformException &e) {
         cerr << "Matrix transformation error: " << e.what() << endl;
+    } catch (const BMPLoaderException &e) {
+        cerr << "BMP loader error: " << e.what() << endl;
     } catch (const exception &e) {
         cerr << e.what() << endl;
     } catch (...) {

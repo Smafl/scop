@@ -11,9 +11,13 @@ public:
 	}
 
 	void linkAttrib() {
-        // position attribute
+        // Position attribute
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
+
+		// Texture coord attribute (location = 1)
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+		glEnableVertexAttribArray(1);
 	}
 
 	void unbind() {

@@ -1,6 +1,6 @@
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
-#include "RenderModel.hpp"
+#include "../modelLoader/RenderModelLoader.hpp"
 
 namespace InputListener {
 	void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
