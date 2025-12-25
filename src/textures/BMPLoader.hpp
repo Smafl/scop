@@ -21,26 +21,27 @@ private:
 	std::string _returnMessage;
 };
 
+#pragma pack(push, 1)
 struct Header {
-	// Header 14 bytes
-	uint16_t signature; // Must be 'BM': 0x4D42
-	uint32_t fileSize; // size of file in bytes
-	uint32_t reserved; // Must be 0
-	uint32_t dataOffset; // Offset from beginning of file to the beginning of the bitmap data
+    uint16_t signature;      // 0x4D42
+    uint32_t fileSize;
+    uint16_t reserved1;
+    uint16_t reserved2;
+    uint32_t dataOffset;
 
-	// InfoHeader 40 bytes
-	uint32_t size; // Size of infoHeader, must be 40
-	uint32_t widht; // Pixels
-	uint32_t height; // Pixels
-	uint16_t planes; // Must be 1
-	uint16_t bitsPerPixel;
-	uint32_t compression; // 0 if no compression
-	uint32_t imageSize; // Can be 0 if compression is 0
-	uint32_t horizontalResolution; // Pixels/meter
-	uint32_t verticalResolution; // Pixels/meter
-	uint32_t colorsUsed;
-	uint32_t importantColors;
+    uint32_t size;           // info header size
+    uint32_t width;
+    uint32_t height;
+    uint16_t planes;
+    uint16_t bitsPerPixel;
+    uint32_t compression;
+    uint32_t imageSize;
+    uint32_t horizontalResolution;
+    uint32_t verticalResolution;
+    uint32_t colorsUsed;
+    uint32_t importantColors;
 };
+#pragma pack(pop)
 
 class BMPLoader {
 public:

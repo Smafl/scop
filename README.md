@@ -14,3 +14,11 @@ git clone https://github.com/Smafl/scop.git
 cd scop
 make
 ./scop models/cube.obj
+
+
+📚 Info sources (might be not available):
+- https://learnopengl.com/Getting-started/OpenGL
+- https://nicolbolas.github.io/oldtut/index.html
+- https://wikis.khronos.org/opengl/Example_Code#GLSL_expression_examples
+- https://solarianprogrammer.com/2018/11/19/cpp-reading-writing-bmp-images/
+- https://en.wikipedia.org/wiki/BMP_file_format

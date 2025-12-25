@@ -77,17 +77,25 @@ int main(int args, char* argv[]) {
 
         Render Render(vertices, indices, shaderProgram);
 
-        // BMPLoader bmpImage("../textures/wood_190S.bmp");
-        // GLenum format = (bmpImage.channels == 4) ? GL_RGBA : GL_RGB;
-        // glEnable(GL_TEXTURE_2D);
-        // GLuint texture;
-        // glGenTextures(1, &texture);
+        BMPLoader bmpImage("../textures/wood_190S.bmp");
+        if (!bmpImage.getPixelData()) {
+            std::cerr << "Failed to load BMP\n";
+            return -1;
+        }
+        GLenum format = (bmpImage.channels == 4) ? GL_BGRA : GL_BGR;
 
-        // glTexImage2D(GL_TEXTURE_2D, 0, format, bmpImage.getBMPHeader()->widht, bmpImage.getBMPHeader()->height, 0, format, GL_UNSIGNED_BYTE, bmpImage.getPixelData());
-        // glGenerateMipmap(GL_TEXTURE_2D);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        // glBindTexture(GL_TEXTURE_2D, 0);
+
+        GLuint texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, bmpImage.getBMPHeader()->width, bmpImage.getBMPHeader()->height, 0, format, GL_UNSIGNED_BYTE, bmpImage.getPixelData());
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
 
         // the field of view
         GLfloat fov = 45.0f;
@@ -111,9 +119,9 @@ int main(int args, char* argv[]) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             glUseProgram(shaderProgram.getShaderProgram());
-            // glActiveTexture(GL_TEXTURE0);
-            // glBindTexture(GL_TEXTURE_2D, texture);
-            // glUniform1i(glGetUniformLocation(shaderProgram.getShaderProgram(), "ourTexture"), 0);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, texture);
+            glUniform1i(glGetUniformLocation(shaderProgram.getShaderProgram(), "ourTexture"), 0);
 
             if (renderModel.isRotate) {
                 double currentTime = glfwGetTime();
@@ -152,7 +160,7 @@ int main(int args, char* argv[]) {
             }
             glUniformMatrix4fv(projectionMatrixLoc, 1, GL_TRUE, projectionMatrix);
 
-            // glBindTexture(GL_TEXTURE_2D, texture);
+            glBindTexture(GL_TEXTURE_2D, texture);
             glBindVertexArray(Render.getVAO().getVAO());
             glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
 
