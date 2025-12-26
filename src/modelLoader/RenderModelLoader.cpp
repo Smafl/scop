@@ -1,4 +1,5 @@
 #include "RenderModelLoader.hpp"
+#include <exception>
 #include <string>
 #include <vector>
 #include <array>
@@ -65,7 +66,7 @@ RenderModelLoader::RenderModelLoader(const string &path) :
 		} else if (type == "f") {
 			parseFaces(sline);
 		} else if (type == "o") {
-			; // implement later
+			; // to implement later
 		} else if (type == "g") {
 			; // to implement later
 		} else if (type == "usemtl") {
@@ -77,6 +78,16 @@ RenderModelLoader::RenderModelLoader(const string &path) :
 	if (_vertices.empty() || _vIndices.empty()) {
 		throw RenderModelLoaderException(RenderModelLoaderException::UNKNOWN_ERROR);
 	}
+}
+
+// getters
+
+const vector<GLfloat> &RenderModelLoader::getFinalVertices() const {
+	return _finalVertices;
+}
+
+const vector<GLuint> &RenderModelLoader::getFinalIndices() const {
+	return _finalIndices;
 }
 
 const vector<GLfloat> &RenderModelLoader::getVertices() const {

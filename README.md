@@ -1,4 +1,4 @@
-# scop -- OpenGL OBJ Viewer
+# scop – OpenGL OBJ Viewer
 
 A 3D viewer built with OpenGL and c++20. It loads and displays `.obj` files and supports basic interactions.
 

@@ -1,4 +1,5 @@
 #include "ShaderProgram.hpp"
+#include <exception>
 #include "iostream"
 #include <vector>
 #include <glad/gl.h>

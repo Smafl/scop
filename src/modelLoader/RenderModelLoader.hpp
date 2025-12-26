@@ -78,6 +78,9 @@ public:
 
     explicit RenderModelLoader(const std::string &path);
 
+    const std::vector<GLfloat> &getFinalVertices() const;
+    const std::vector<GLuint> &getFinalIndices() const;
+
     const std::vector<GLfloat> &getVertices() const;
     const std::vector<GLuint> &getTextures() const;
     const std::vector<GLuint> &getNormals() const;
@@ -87,6 +90,9 @@ public:
     const std::vector<GLuint> &getVnIndices() const;
 
 private:
+    std::vector<GLfloat> _finalVertices; // not implemented
+    std::vector<GLuint>  _finalIndices; // not implemented
+
     std::vector<GLfloat> _vertices;
     std::vector<GLuint> _texture;
     std::vector<GLuint> _normals;

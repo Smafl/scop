@@ -10,7 +10,7 @@
 #include "render/Render.hpp"
 #include "matrixMath/MatrixTransform.hpp"
 #include "inputHandler/InputListener.hpp"
-#include "textures/BMPLoader.hpp"
+#include "texture/Texture.hpp"
 
 using namespace std;
 
@@ -48,6 +48,7 @@ int main(int args, char* argv[]) {
 
     try {
         RenderModelLoader renderModel(argv[1]);
+        // check vectors !
         vector<GLfloat> vertices = renderModel.getVertices();
         vector<GLuint> indices = renderModel.getVIndices();
 
@@ -63,10 +64,10 @@ int main(int args, char* argv[]) {
         // cout << "OpenGL version: " << version << endl;
 
         vector<Shader> shaders;
-        Shader vertexShaderInstance("../src/shaderSources/default.vert", GL_VERTEX_SHADER);
+        Shader vertexShaderInstance("../src/shaderSources/texture.vert", GL_VERTEX_SHADER);
         shaders.push_back(vertexShaderInstance);
 
-        Shader fragmentShaderInstance("../src/shaderSources/default.frag", GL_FRAGMENT_SHADER);
+        Shader fragmentShaderInstance("../src/shaderSources/texture.frag", GL_FRAGMENT_SHADER);
         shaders.push_back(fragmentShaderInstance);
 
         ShaderProgram shaderProgram(shaders);
@@ -77,25 +78,31 @@ int main(int args, char* argv[]) {
 
         Render Render(vertices, indices, shaderProgram);
 
-        BMPLoader bmpImage("../textures/wood_190S.bmp");
-        if (!bmpImage.getPixelData()) {
-            std::cerr << "Failed to load BMP\n";
-            return -1;
-        }
-        GLenum format = (bmpImage.channels == 4) ? GL_BGRA : GL_BGR;
+        // BMPLoader bmpImage("../textures/wood.bmp");
+        // if (!bmpImage.getPixelData()) {
+        //     std::cerr << "Failed to load BMP\n";
+        //     return EXIT_FAILURE;
+        // }
 
+        // GLenum formatBMPImage = (bmpImage.channels == 4) ? GL_BGRA : GL_BGR;
 
+        Texture texturaIns("../textures/wood.bmp");
+        ImageData imagedata = texturaIns.getImageData();
         GLuint texture;
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, bmpImage.getBMPHeader()->width, bmpImage.getBMPHeader()->height, 0, format, GL_UNSIGNED_BYTE, bmpImage.getPixelData());
-        glGenerateMipmap(GL_TEXTURE_2D);
+        glTexImage2D(
+            GL_TEXTURE_2D, 0, GL_RGB,
+            imagedata.width,
+            imagedata.height,
+            0, imagedata.formatBMPImage, GL_UNSIGNED_BYTE,
+            imagedata._pixelData);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-        glBindTexture(GL_TEXTURE_2D, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT) ;
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT) ;
 
         // the field of view
         GLfloat fov = 45.0f;
@@ -120,8 +127,8 @@ int main(int args, char* argv[]) {
 
             glUseProgram(shaderProgram.getShaderProgram());
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, texture);
             glUniform1i(glGetUniformLocation(shaderProgram.getShaderProgram(), "ourTexture"), 0);
+            glBindTexture(GL_TEXTURE_2D, texture);
 
             if (renderModel.isRotate) {
                 double currentTime = glfwGetTime();
@@ -171,9 +178,13 @@ int main(int args, char* argv[]) {
             glfwPollEvents();
         }
 
+        glBindTexture(GL_TEXTURE_2D, 0);
+
         Render.cleanUp();
         return 0;
 
+    } catch (const WindowException &e) {
+        cerr << "Window error: " << e.what() << endl;
     } catch (const RenderModelLoaderException &e) {
         cerr << "Rendering model error: " << e.what() << endl;
     } catch (const ShaderException &e) {
@@ -184,6 +195,8 @@ int main(int args, char* argv[]) {
         cerr << "Matrix transformation error: " << e.what() << endl;
     } catch (const BMPLoaderException &e) {
         cerr << "BMP loader error: " << e.what() << endl;
+    } catch (const TextureException &e) {
+        cerr << "Texture error: " << e.what() << endl;
     } catch (const exception &e) {
         cerr << e.what() << endl;
     } catch (...) {

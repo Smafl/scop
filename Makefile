@@ -31,8 +31,9 @@ SRC =	src/main.cpp\
 		src/shaders/Shader.cpp\
 		src/shaders/ShaderProgram.cpp\
 		src/render/Render.cpp\
+		src/texture/Texture.cpp\
+		src/texture/BMPLoader.cpp\
 		src/matrixMath/MatrixTransform.cpp\
-		src/textures/BMPLoader.cpp
 
 OBJ_DIR = obj
 

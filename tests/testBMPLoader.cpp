@@ -4,7 +4,6 @@
 #include "../src/textures/BMPLoader.hpp"
 #include "../src/window/Window.hpp"
 
-// Very small shaders embedded for testing
 const char* vertexSrc = R"(
 #version 330 core
 layout (location = 0) in vec2 aPos;
