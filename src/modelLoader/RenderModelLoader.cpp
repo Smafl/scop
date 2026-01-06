@@ -243,25 +243,59 @@ void RenderModelLoader::parseFaces(istringstream &line) {
 		throw RenderModelLoaderException(RenderModelLoaderException::INVALID_FACE_FORMAT);
 	}
 
+	size_t maxVertexIndex = (_vertices.size() / 4);
+	size_t maxTextureIndex = (_texture.size() / 2);
+	size_t maxNormalIndex = (_normals.size() / 3);
+
 	// how many triangles: tokensSize - 2
 	for (int i = 1; i + 1 != tokensSize; i++) {
 		try {
+			// Vertex indices
 			if ((!tokens[0][0].empty()) && (!tokens[i][0].empty()) && (!tokens[i + 1][0].empty())) {
-				_vIndices.push_back(stoul(tokens[0][0]) - 1);
-				_vIndices.push_back(stoul(tokens[i][0]) - 1);
-				_vIndices.push_back(stoul(tokens[i + 1][0]) - 1);
+				GLuint idx0 = stoul(tokens[0][0]) - 1;
+				GLuint idx1 = stoul(tokens[i][0]) - 1;
+				GLuint idx2 = stoul(tokens[i + 1][0]) - 1;
+
+				// Validate indices
+				if (idx0 >= maxVertexIndex || idx1 >= maxVertexIndex || idx2 >= maxVertexIndex) {
+					throw RenderModelLoaderException(RenderModelLoaderException::INDEX_OUT_OF_RANGE);
+				}
+
+				_vIndices.push_back(idx0);
+				_vIndices.push_back(idx1);
+				_vIndices.push_back(idx2);
 			}
 
+			// Texture coordinate indices
 			if ((!tokens[0][1].empty()) && (!tokens[i][1].empty()) && (!tokens[i + 1][1].empty())) {
-				_vtIndices.push_back(stoul(tokens[0][1]) - 1);
-				_vtIndices.push_back(stoul(tokens[i][1]) - 1);
-				_vtIndices.push_back(stoul(tokens[i + 1][1]) - 1);
+				GLuint idx0 = stoul(tokens[0][1]) - 1;
+				GLuint idx1 = stoul(tokens[i][1]) - 1;
+				GLuint idx2 = stoul(tokens[i + 1][1]) - 1;
+
+				// Validate indices
+				if (idx0 >= maxTextureIndex || idx1 >= maxTextureIndex || idx2 >= maxTextureIndex) {
+					throw RenderModelLoaderException(RenderModelLoaderException::INDEX_OUT_OF_RANGE);
+				}
+
+				_vtIndices.push_back(idx0);
+				_vtIndices.push_back(idx1);
+				_vtIndices.push_back(idx2);
 			}
 
+			// Normal indices
 			if ((!tokens[0][2].empty()) && (!tokens[i][2].empty()) && (!tokens[i + 1][2].empty())) {
-				_vnIndices.push_back(stoul(tokens[0][2]) - 1);
-				_vnIndices.push_back(stoul(tokens[i][2]) - 1);
-				_vnIndices.push_back(stoul(tokens[i + 1][2]) - 1);
+				GLuint idx0 = stoul(tokens[0][2]) - 1;
+				GLuint idx1 = stoul(tokens[i][2]) - 1;
+				GLuint idx2 = stoul(tokens[i + 1][2]) - 1;
+
+				// Validate indices
+				if (idx0 >= maxNormalIndex || idx1 >= maxNormalIndex || idx2 >= maxNormalIndex) {
+					throw RenderModelLoaderException(RenderModelLoaderException::INDEX_OUT_OF_RANGE);
+				}
+
+				_vnIndices.push_back(idx0);
+				_vnIndices.push_back(idx1);
+				_vnIndices.push_back(idx2);
 			}
     	} catch (const invalid_argument&) {
     	    throw RenderModelLoaderException(RenderModelLoaderException::INVALID_FACE_FORMAT);

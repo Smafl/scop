@@ -30,18 +30,6 @@ int main(int args, char* argv[]) {
         vector<GLfloat> vertices = renderModel.getFinalVertices();
         vector<GLuint> indices = renderModel.getFinalIndices();
 
-        cout << "=== DEBUG INFO ===" << endl;
-        cout << "Original vertices: " << renderModel.getVertices().size() / 4 << " positions" << endl;
-        cout << "Original texture coords: " << renderModel.getTextures().size() / 2 << " UVs" << endl;
-        cout << "Final vertices: " << vertices.size() / 5 << " complete vertices" << endl;
-        cout << "Final indices: " << indices.size() << " indices" << endl;
-        cout << "First 15 final vertex values (3 pos + 2 tex): " << endl;
-        for (int i = 0; i < min(15, (int)vertices.size()); i++) {
-            cout << vertices[i] << " ";
-            if ((i + 1) % 5 == 0) cout << endl;
-        }
-        cout << "==================" << endl;
-
         Window windowInstance(width, height, windowName);
         GLFWwindow *window = windowInstance.getWindow();
 
@@ -68,24 +56,8 @@ int main(int args, char* argv[]) {
 
         Render render(vertices, indices, shaderProgram);
 
-        Texture texturaIns("../textures/brick.bmp");
-        ImageData imagedata = texturaIns.getImageData();
-        GLuint texture;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        Texture texture("../textures/brick.bmp");
 
-        glTexImage2D(
-            GL_TEXTURE_2D, 0, GL_RGB,
-            imagedata.width,
-            imagedata.height,
-            0, imagedata.formatBMPImage, GL_UNSIGNED_BYTE,
-            imagedata._pixelData);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT) ;
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT) ;
-        glActiveTexture(GL_TEXTURE0);
         glUniform1i(glGetUniformLocation(shaderProgram.getShaderProgram(), "tex"), 0);
 
         // the field of view
@@ -110,8 +82,6 @@ int main(int args, char* argv[]) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             glUseProgram(shaderProgram.getShaderProgram());
-            // glActiveTexture(GL_TEXTURE0);
-            // glUniform1i(glGetUniformLocation(shaderProgram.getShaderProgram(), "ourTexture"), 0);
 
             if (renderModel.isRotate) {
                 double currentTime = glfwGetTime();
@@ -160,8 +130,7 @@ int main(int args, char* argv[]) {
             glfwPollEvents();
         }
 
-        glBindTexture(GL_TEXTURE_2D, 0);
-
+        texture.cleanUp();
         render.cleanUp();
         return 0;
 

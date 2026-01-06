@@ -31,7 +31,7 @@ class Texture {
 public:
 	explicit Texture(const std::string &path);
 
-	void bindTexture();
+	// void bindTexture();
 	void cleanUp();
 
 	const ImageData &getImageData() const;
@@ -41,5 +41,6 @@ private:
 	std::string _path;
 	ImageData _imageData;
 
+	void createTexture();
 	Texture();
 };
