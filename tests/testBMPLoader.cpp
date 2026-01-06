@@ -1,7 +1,7 @@
 #include <iostream>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
-#include "../src/textures/BMPLoader.hpp"
+#include "../src/texture/BMPLoader.hpp"
 #include "../src/window/Window.hpp"
 
 const char* vertexSrc = R"(
@@ -42,7 +42,7 @@ int main() {
     }
 
     // ---- Load BMP ----
-    BMPLoader bmp("../textures/wood_190S.bmp");
+    BMPLoader bmp("../textureSources/wood_190S.bmp");
     if (!bmp.getPixelData()) {
         std::cerr << "BMP load failed\n";
         return -1;

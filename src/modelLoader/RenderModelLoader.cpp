@@ -27,79 +27,6 @@ const char *RenderModelLoaderException::what() const noexcept {
 	}
 }
 
-void RenderModelLoader::generateFinalVertices() {
-    _finalVertices.clear();
-    _finalIndices.clear();
-
-    // Find bounding box for UV normalization
-    GLfloat minX = FLT_MAX, maxX = -FLT_MAX;
-    GLfloat minY = FLT_MAX, maxY = -FLT_MAX;
-    GLfloat minZ = FLT_MAX, maxZ = -FLT_MAX;
-
-    for (size_t i = 0; i < _vertices.size(); i += 4) {
-        minX = min(minX, _vertices[i]);
-        maxX = max(maxX, _vertices[i]);
-        minY = min(minY, _vertices[i + 1]);
-        maxY = max(maxY, _vertices[i + 1]);
-        minZ = min(minZ, _vertices[i + 2]);
-        maxZ = max(maxZ, _vertices[i + 2]);
-    }
-
-    GLfloat rangeX = maxX - minX;
-    GLfloat rangeY = maxY - minY;
-    GLfloat rangeZ = maxZ - minZ;
-
-    // Avoid division by zero
-    if (rangeX < 0.0001f) rangeX = 1.0f;
-    if (rangeY < 0.0001f) rangeY = 1.0f;
-    if (rangeZ < 0.0001f) rangeZ = 1.0f;
-
-    map<string, GLuint> uniqueVertices;
-    bool hasTextureCoords = !_texture.empty() && !_vtIndices.empty();
-
-    for (size_t i = 0; i < _vIndices.size(); i++) {
-        GLuint vIdx = _vIndices[i];
-        GLuint vtIdx = (i < _vtIndices.size()) ? _vtIndices[i] : 0;
-
-        // Create unique key for this vertex/texcoord combination
-        string key = to_string(vIdx) + "/" + to_string(vtIdx);
-
-        if (uniqueVertices.find(key) == uniqueVertices.end()) {
-            GLuint newIndex = static_cast<GLuint>(_finalVertices.size() / 5);
-            uniqueVertices[key] = newIndex;
-
-            // Position (x, y, z)
-            GLfloat posX = _vertices[vIdx * 4];
-            GLfloat posY = _vertices[vIdx * 4 + 1];
-            GLfloat posZ = _vertices[vIdx * 4 + 2];
-
-            _finalVertices.push_back(posX);
-            _finalVertices.push_back(posY);
-            _finalVertices.push_back(posZ);
-
-            // Texture coordinates (u, v)
-            if (hasTextureCoords && vtIdx * 2 + 1 < _texture.size()) {
-                // Use existing texture coordinates from file
-                _finalVertices.push_back(_texture[vtIdx * 2]);
-                _finalVertices.push_back(_texture[vtIdx * 2 + 1]);
-            } else {
-                // Generate planar UV mapping based on XY plane
-                GLfloat u = (posX - minX) / rangeX;
-                GLfloat v = (posY - minY) / rangeY;
-
-                _finalVertices.push_back(u);
-                _finalVertices.push_back(v);
-            }
-        }
-
-        _finalIndices.push_back(uniqueVertices[key]);
-    }
-
-    if (!hasTextureCoords) {
-        cout << "Note: Model has no UV coordinates, using auto-generated planar mapping" << endl;
-    }
-}
-
 /**
 * @brief Loads and parses an OBJ file.
 * @param path Path to the OBJ file.
@@ -155,6 +82,100 @@ RenderModelLoader::RenderModelLoader(const string &path) :
 	}
 
 	generateFinalVertices();
+}
+
+void RenderModelLoader::generateFinalVertices() {
+    _finalVertices.clear();
+    _finalIndices.clear();
+
+    // Calculate bounding box for UV generation
+    GLfloat minX = 1e10f, maxX = -1e10f;
+    GLfloat minY = 1e10f, maxY = -1e10f;
+    GLfloat minZ = 1e10f, maxZ = -1e10f;
+
+    for (size_t i = 0; i < _vertices.size(); i += 4) {
+        if (_vertices[i] < minX) minX = _vertices[i];
+        if (_vertices[i] > maxX) maxX = _vertices[i];
+        if (_vertices[i + 1] < minY) minY = _vertices[i + 1];
+        if (_vertices[i + 1] > maxY) maxY = _vertices[i + 1];
+        if (_vertices[i + 2] < minZ) minZ = _vertices[i + 2];
+        if (_vertices[i + 2] > maxZ) maxZ = _vertices[i + 2];
+    }
+
+    GLfloat rangeX = maxX - minX;
+    GLfloat rangeY = maxY - minY;
+    GLfloat rangeZ = maxZ - minZ;
+
+    if (rangeX < 0.0001f) rangeX = 1.0f;
+    if (rangeY < 0.0001f) rangeY = 1.0f;
+    if (rangeZ < 0.0001f) rangeZ = 1.0f;
+
+    map<string, GLuint> uniqueVertices;
+    bool hasTextureCoords = !_texture.empty() && !_vtIndices.empty();
+    bool hasNormals = !_normals.empty() && !_vnIndices.empty();
+
+    for (size_t i = 0; i < _vIndices.size(); i++) {
+        GLuint vIdx = _vIndices[i];
+        GLuint vtIdx = (i < _vtIndices.size()) ? _vtIndices[i] : 0;
+        GLuint vnIdx = (i < _vnIndices.size()) ? _vnIndices[i] : 0;
+
+        string key = to_string(vIdx) + "/" + to_string(vtIdx) + "/" + to_string(vnIdx);
+
+        if (uniqueVertices.find(key) == uniqueVertices.end()) {
+            GLuint newIndex = static_cast<GLuint>(_finalVertices.size() / 8);  // Now 8 floats per vertex!
+            uniqueVertices[key] = newIndex;
+
+            // Position (x, y, z)
+            GLfloat posX = _vertices[vIdx * 4];
+            GLfloat posY = _vertices[vIdx * 4 + 1];
+            GLfloat posZ = _vertices[vIdx * 4 + 2];
+
+            _finalVertices.push_back(posX);
+            _finalVertices.push_back(posY);
+            _finalVertices.push_back(posZ);
+
+            // Texture coordinates (u, v)
+            if (hasTextureCoords && vtIdx * 2 + 1 < _texture.size()) {
+                _finalVertices.push_back(_texture[vtIdx * 2]);
+                _finalVertices.push_back(_texture[vtIdx * 2 + 1]);
+            } else {
+                GLfloat u = (posX - minX) / rangeX;
+                GLfloat v = (posY - minY) / rangeY;
+                _finalVertices.push_back(u);
+                _finalVertices.push_back(v);
+            }
+
+            // Color based on normal direction (to distinguish sides)
+            GLfloat r, g, b;
+            if (hasNormals && vnIdx * 3 + 2 < _normals.size()) {
+                // Use normal direction to determine color
+                GLfloat nx = _normals[vnIdx * 3];
+                GLfloat ny = _normals[vnIdx * 3 + 1];
+                GLfloat nz = _normals[vnIdx * 3 + 2];
+
+                // Map normal direction to color
+                // Faces pointing in different directions get different colors
+                r = (nx + 1.0f) * 0.5f;  // Map -1..1 to 0..1
+                g = (ny + 1.0f) * 0.5f;
+                b = (nz + 1.0f) * 0.5f;
+            } else {
+                // Fallback: use position-based coloring
+                r = (posX - minX) / rangeX;
+                g = (posY - minY) / rangeY;
+                b = (posZ - minZ) / rangeZ;
+            }
+
+            _finalVertices.push_back(r);
+            _finalVertices.push_back(g);
+            _finalVertices.push_back(b);
+        }
+
+        _finalIndices.push_back(uniqueVertices[key]);
+    }
+
+    if (!hasTextureCoords) {
+        cout << "Note: Model has no UV coordinates, using auto-generated planar mapping" << endl;
+    }
 }
 
 // getters

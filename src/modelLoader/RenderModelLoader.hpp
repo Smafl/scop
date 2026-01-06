@@ -72,6 +72,7 @@ public:
     GLfloat delta = 0.05f;
     GLfloat rotation = 0.0f;
     bool isRotate = true;
+    bool textureMode = false;
     GLfloat minZ = -5.0f;
     GLfloat maxZ = 0.5f;
     GLfloat scaleFactor = 0.075f;

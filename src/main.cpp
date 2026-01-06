@@ -37,15 +37,15 @@ int main(int args, char* argv[]) {
             throw runtime_error("Failed to initialize GLAD");
         }
 
-        // // Check OpenGL version
-        // const GLubyte* version = glGetString(GL_VERSION);
-        // cout << "OpenGL version: " << version << endl;
+        // Check OpenGL version
+        const GLubyte* version = glGetString(GL_VERSION);
+        cout << "OpenGL version: " << version << endl;
 
         vector<Shader> shaders;
-        Shader vertexShaderInstance("../src/shaderSources/texture.vert", GL_VERTEX_SHADER);
+        Shader vertexShaderInstance("../src/shaderSources/final.vert", GL_VERTEX_SHADER);
         shaders.push_back(vertexShaderInstance);
 
-        Shader fragmentShaderInstance("../src/shaderSources/texture.frag", GL_FRAGMENT_SHADER);
+        Shader fragmentShaderInstance("../src/shaderSources/final.frag", GL_FRAGMENT_SHADER);
         shaders.push_back(fragmentShaderInstance);
 
         ShaderProgram shaderProgram(shaders);
@@ -56,9 +56,12 @@ int main(int args, char* argv[]) {
 
         Render render(vertices, indices, shaderProgram);
 
-        Texture texture("../textures/brick.bmp");
+        Texture texture("../textureSources/glass.bmp");
 
         glUniform1i(glGetUniformLocation(shaderProgram.getShaderProgram(), "tex"), 0);
+
+        float mixValue = 0.0f;  // 0.0 = colors, 1.0 = texture
+        float transitionSpeed = 1.0f;
 
         // the field of view
         GLfloat fov = 45.0f;
@@ -74,9 +77,14 @@ int main(int args, char* argv[]) {
 	    glfwSetMouseButtonCallback(window, InputListener::mouse_button_callback);
 	    glfwSetScrollCallback(window, InputListener::scroll_callback);
 
+
         // Loop until the user closes the window
         while (!windowInstance.windowShouldClose()) {
             // Render here
+
+            double currentTime = glfwGetTime();
+            double deltaTime = currentTime - prevTime;
+            prevTime = currentTime;
 
             // Crears the screen
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -84,12 +92,20 @@ int main(int args, char* argv[]) {
             glUseProgram(shaderProgram.getShaderProgram());
 
             if (renderModel.isRotate) {
-                double currentTime = glfwGetTime();
-                if (currentTime - prevTime >= 1 / 60) {
-                    renderModel.rotation += 0.25f;
-                    prevTime = currentTime;
+                if (deltaTime >= 1 / 60) {
+                    renderModel.rotation += 0.25f * deltaTime * 60.0f;
                 }
             }
+
+            if (renderModel.textureMode && mixValue < 1.0f) {
+                mixValue += transitionSpeed * deltaTime;
+                if (mixValue > 1.0f) mixValue = 1.0f;
+            } else if (!renderModel.textureMode && mixValue > 0.0f) {
+                mixValue -= transitionSpeed * deltaTime;
+                if (mixValue < 0.0f) mixValue = 0.0f;
+            }
+
+            glUniform1f(glGetUniformLocation(shaderProgram.getShaderProgram(), "mixValue"), mixValue);
 
             GLfloat modelMatrix[16], projectionMatrix[16];
             GLfloat scale[16], rotate[16];
@@ -130,7 +146,7 @@ int main(int args, char* argv[]) {
             glfwPollEvents();
         }
 
-        texture.cleanUp();
+        texture.unbindTexture();
         render.cleanUp();
         return 0;
 

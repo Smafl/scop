@@ -7,7 +7,7 @@
 
 using namespace std;
 
-BMPLoaderException::BMPLoaderException(ErrorCode err, const std::string &path)
+BMPLoaderException::BMPLoaderException(ErrorCode err, const string &path)
 	: _errorCode(err), _path(path)
 {
 	if (_path.empty()) {
@@ -37,13 +37,14 @@ const char *BMPLoaderException::what() const noexcept {
 BMPLoader::BMPLoader(const string &path)
 	: _path(path)
 {
+	cout << "BMP is starting loading from " << _path << endl;
+
 	if (_path.empty()) {
 		throw BMPLoaderException(BMPLoaderException::FILE_NOT_FOUND, _path);
 	}
 
 	FILE* file = fopen(_path.c_str(), "rb");
 	if (!file) {
-		fclose(file);
 		throw BMPLoaderException(BMPLoaderException::CANNOT_OPEN, _path);
 	}
 
@@ -91,7 +92,7 @@ BMPLoader::BMPLoader(const string &path)
     //     memcpy(dstRow, srcRow, _bmpHeader.width * channels);
     // }
 
-	cout << "BMP was loaded" << endl;
+	cout << "BMP was loaded from " << _path << endl;
 }
 
 const Header *BMPLoader::getBMPHeader() const {

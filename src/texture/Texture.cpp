@@ -6,6 +6,8 @@
 #include <sstream>
 #include <fstream>
 #include <vector>
+#include <iostream>
+#include <filesystem>
 
 using namespace std;
 
@@ -19,43 +21,31 @@ const char *TextureException::what() const noexcept {
 	}
 }
 
-void Texture::createTexture() {
-	glGenTextures(1, &_imageData.texture);
-	glBindTexture(GL_TEXTURE_2D, _imageData.texture);
+Texture::Texture(const string &path) :
+	_bmpImage(path.c_str())
+{
+	glGenTextures(1, &_textureID);
+	glBindTexture(GL_TEXTURE_2D, _textureID);
+
+	GLenum formatBMPImage =(_bmpImage.channels == 4) ? GL_BGRA : GL_BGR;
 
 	glTexImage2D(
 		GL_TEXTURE_2D, 0, GL_RGB,
-		_imageData.width,
-		_imageData.height,
-		0, _imageData.formatBMPImage, GL_UNSIGNED_BYTE,
-		_imageData._pixelData);
+		_bmpImage.getBMPHeader()->width,
+		_bmpImage.getBMPHeader()->height,
+		0, formatBMPImage, GL_UNSIGNED_BYTE,
+		_bmpImage.getPixelData());
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT) ;
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT) ;
 	glActiveTexture(GL_TEXTURE0);
-}
 
-Texture::Texture(const std::string &path) :
-	_bmpImage(BMPLoader(path.c_str()))
-{
-	_imageData.formatBMPImage =(_bmpImage.channels == 4) ? GL_BGRA : GL_BGR;
-	_imageData.width = _bmpImage.getBMPHeader()->width;
-	_imageData.height = _bmpImage.getBMPHeader()->height;
-	_imageData._pixelData = _bmpImage.getPixelData();
-
-	createTexture();
-}
-
-// getters
-
-const ImageData &Texture::getImageData() const {
-	return _imageData;
 }
 
 // other
 
-void Texture::cleanUp() {
+void Texture::unbindTexture() {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }

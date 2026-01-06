@@ -39,9 +39,15 @@ namespace InputListener {
 	        model->translationZ += model->delta;
 	    }
 
+		// Rotation
 	    if (key == GLFW_KEY_R && action == GLFW_PRESS && ((mods & GLFW_MOD_CONTROL) || (mods & GLFW_MOD_SUPER))) {
 	        model->isRotate = (model->isRotate == true) ? false : true;
 	    }
+
+		// Switch texture/color
+		if (key == GLFW_KEY_T && action == GLFW_PRESS && ((mods & GLFW_MOD_CONTROL) || (mods & GLFW_MOD_SUPER))) {
+			model->textureMode = !model->textureMode;
+		}
 	}
 
 	void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
