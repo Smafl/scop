@@ -23,9 +23,9 @@ Texture::Texture(const std::string &path) :
 	_bmpImage(BMPLoader(path.c_str()))
 {
 
-	if (!_bmpImage.getPixelData()) {
-		throw TextureException(TextureException::NO_DATA);
-	}
+	// if (!_bmpImage.getPixelData()) {
+	// 	throw TextureException(TextureException::NO_DATA);
+	// }
 
 	_imageData.formatBMPImage =(_bmpImage.channels == 4) ? GL_BGRA : GL_BGR;
 	_imageData.width = _bmpImage.getBMPHeader()->width;
@@ -37,4 +37,10 @@ Texture::Texture(const std::string &path) :
 
 const ImageData &Texture::getImageData() const {
 	return _imageData;
+}
+
+// other
+
+void Texture::cleanUp() {
+	glBindTexture(GL_TEXTURE_2D, 0);
 }

@@ -44,8 +44,9 @@ void Render::glSettings() {
 	// the depth value for every pixel
 	// when enabled: performing the depth test
 	glEnable(GL_DEPTH_TEST);
+	// glDisable(GL_CULL_FACE);
 
-	// glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 	// glFrontFace(GL_CW);
 	// glCullFace(GL_BACK);
 }

@@ -7,6 +7,9 @@
 #include <fstream>
 #include <sstream>
 #include <glad/gl.h>
+#include <map>
+#include <cfloat>  // FLT_MAX
+#include <algorithm>  // min/max
 
 using namespace std;
 
@@ -24,6 +27,78 @@ const char *RenderModelLoaderException::what() const noexcept {
 	}
 }
 
+void RenderModelLoader::generateFinalVertices() {
+    _finalVertices.clear();
+    _finalIndices.clear();
+
+    // Find bounding box for UV normalization
+    GLfloat minX = FLT_MAX, maxX = -FLT_MAX;
+    GLfloat minY = FLT_MAX, maxY = -FLT_MAX;
+    GLfloat minZ = FLT_MAX, maxZ = -FLT_MAX;
+
+    for (size_t i = 0; i < _vertices.size(); i += 4) {
+        minX = min(minX, _vertices[i]);
+        maxX = max(maxX, _vertices[i]);
+        minY = min(minY, _vertices[i + 1]);
+        maxY = max(maxY, _vertices[i + 1]);
+        minZ = min(minZ, _vertices[i + 2]);
+        maxZ = max(maxZ, _vertices[i + 2]);
+    }
+
+    GLfloat rangeX = maxX - minX;
+    GLfloat rangeY = maxY - minY;
+    GLfloat rangeZ = maxZ - minZ;
+
+    // Avoid division by zero
+    if (rangeX < 0.0001f) rangeX = 1.0f;
+    if (rangeY < 0.0001f) rangeY = 1.0f;
+    if (rangeZ < 0.0001f) rangeZ = 1.0f;
+
+    map<string, GLuint> uniqueVertices;
+    bool hasTextureCoords = !_texture.empty() && !_vtIndices.empty();
+
+    for (size_t i = 0; i < _vIndices.size(); i++) {
+        GLuint vIdx = _vIndices[i];
+        GLuint vtIdx = (i < _vtIndices.size()) ? _vtIndices[i] : 0;
+
+        // Create unique key for this vertex/texcoord combination
+        string key = to_string(vIdx) + "/" + to_string(vtIdx);
+
+        if (uniqueVertices.find(key) == uniqueVertices.end()) {
+            GLuint newIndex = static_cast<GLuint>(_finalVertices.size() / 5);
+            uniqueVertices[key] = newIndex;
+
+            // Position (x, y, z)
+            GLfloat posX = _vertices[vIdx * 4];
+            GLfloat posY = _vertices[vIdx * 4 + 1];
+            GLfloat posZ = _vertices[vIdx * 4 + 2];
+
+            _finalVertices.push_back(posX);
+            _finalVertices.push_back(posY);
+            _finalVertices.push_back(posZ);
+
+            // Texture coordinates (u, v)
+            if (hasTextureCoords && vtIdx * 2 + 1 < _texture.size()) {
+                // Use existing texture coordinates from file
+                _finalVertices.push_back(_texture[vtIdx * 2]);
+                _finalVertices.push_back(_texture[vtIdx * 2 + 1]);
+            } else {
+                // Generate planar UV mapping based on XY plane
+                GLfloat u = (posX - minX) / rangeX;
+                GLfloat v = (posY - minY) / rangeY;
+
+                _finalVertices.push_back(u);
+                _finalVertices.push_back(v);
+            }
+        }
+
+        _finalIndices.push_back(uniqueVertices[key]);
+    }
+
+    if (!hasTextureCoords) {
+        cout << "Note: Model has no UV coordinates, using auto-generated planar mapping" << endl;
+    }
+}
 
 /**
 * @brief Loads and parses an OBJ file.
@@ -78,6 +153,8 @@ RenderModelLoader::RenderModelLoader(const string &path) :
 	if (_vertices.empty() || _vIndices.empty()) {
 		throw RenderModelLoaderException(RenderModelLoaderException::UNKNOWN_ERROR);
 	}
+
+	generateFinalVertices();
 }
 
 // getters
@@ -94,7 +171,7 @@ const vector<GLfloat> &RenderModelLoader::getVertices() const {
 	return _vertices;
 }
 
-const vector<GLuint> &RenderModelLoader::getTextures() const {
+const vector<GLfloat> &RenderModelLoader::getTextures() const {
 	return _texture;
 }
 

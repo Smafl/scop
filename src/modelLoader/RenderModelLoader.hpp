@@ -82,7 +82,7 @@ public:
     const std::vector<GLuint> &getFinalIndices() const;
 
     const std::vector<GLfloat> &getVertices() const;
-    const std::vector<GLuint> &getTextures() const;
+    const std::vector<GLfloat> &getTextures() const;
     const std::vector<GLuint> &getNormals() const;
 
     const std::vector<GLuint> &getVIndices() const;
@@ -90,11 +90,11 @@ public:
     const std::vector<GLuint> &getVnIndices() const;
 
 private:
-    std::vector<GLfloat> _finalVertices; // not implemented
+    std::vector<GLfloat> _finalVertices;
     std::vector<GLuint>  _finalIndices; // not implemented
 
     std::vector<GLfloat> _vertices;
-    std::vector<GLuint> _texture;
+    std::vector<GLfloat> _texture;
     std::vector<GLuint> _normals;
 
     std::vector<GLuint> _vIndices;
@@ -103,6 +103,7 @@ private:
 
     std::string _path;
 
+    void generateFinalVertices();
     void parseFaces(std::istringstream &line);
     RenderModelLoader();
 };

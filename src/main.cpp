@@ -16,41 +16,31 @@ using namespace std;
 
 double prevTime = glfwGetTime();
 
-// void parseArgv(char** argv, int *width, int *height, char *windowName) {
-//     ;
-// }
-
-void getHelp() {
-    cout << "File with a model is mandatory after executable file name" << endl;
-    cout << "Optional arguments: window width, height and name" << endl;
-    cout << endl;
-    cout << "Example 1: ./scop models/zombie.obj" << endl;
-    cout << "Example 2: ./scop models/zombie.obj 640 480" << endl;
-    cout << "Example 3: ./scop models/zombie.obj 640 480 Zombie" << endl;
-}
-
 int main(int args, char* argv[]) {
 
     int width = 0, height = 0;
-    // char *objFile = argv[1];
     char *windowName = nullptr;
 
     if (args < 2) {
-        cerr << "No object file given. Run './scop help' to get help" << endl;
-        return EXIT_FAILURE;
-    } else if (static_cast<string>(argv[1]) == "help") {
-        getHelp();
+        cout << "File with a model is mandatory after executable file name" << endl;
         return 0;
     }
-    // } else {
-    //     parseArgv(argv, &width, &height, windowName);
-    // }
-
     try {
         RenderModelLoader renderModel(argv[1]);
-        // check vectors !
-        vector<GLfloat> vertices = renderModel.getVertices();
-        vector<GLuint> indices = renderModel.getVIndices();
+        vector<GLfloat> vertices = renderModel.getFinalVertices();
+        vector<GLuint> indices = renderModel.getFinalIndices();
+
+        cout << "=== DEBUG INFO ===" << endl;
+        cout << "Original vertices: " << renderModel.getVertices().size() / 4 << " positions" << endl;
+        cout << "Original texture coords: " << renderModel.getTextures().size() / 2 << " UVs" << endl;
+        cout << "Final vertices: " << vertices.size() / 5 << " complete vertices" << endl;
+        cout << "Final indices: " << indices.size() << " indices" << endl;
+        cout << "First 15 final vertex values (3 pos + 2 tex): " << endl;
+        for (int i = 0; i < min(15, (int)vertices.size()); i++) {
+            cout << vertices[i] << " ";
+            if ((i + 1) % 5 == 0) cout << endl;
+        }
+        cout << "==================" << endl;
 
         Window windowInstance(width, height, windowName);
         GLFWwindow *window = windowInstance.getWindow();
@@ -76,17 +66,9 @@ int main(int args, char* argv[]) {
         vertexShaderInstance.deleteShader();
         fragmentShaderInstance.deleteShader();
 
-        Render Render(vertices, indices, shaderProgram);
+        Render render(vertices, indices, shaderProgram);
 
-        // BMPLoader bmpImage("../textures/wood.bmp");
-        // if (!bmpImage.getPixelData()) {
-        //     std::cerr << "Failed to load BMP\n";
-        //     return EXIT_FAILURE;
-        // }
-
-        // GLenum formatBMPImage = (bmpImage.channels == 4) ? GL_BGRA : GL_BGR;
-
-        Texture texturaIns("../textures/wood.bmp");
+        Texture texturaIns("../textures/brick.bmp");
         ImageData imagedata = texturaIns.getImageData();
         GLuint texture;
         glGenTextures(1, &texture);
@@ -103,6 +85,8 @@ int main(int args, char* argv[]) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT) ;
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT) ;
+        glActiveTexture(GL_TEXTURE0);
+        glUniform1i(glGetUniformLocation(shaderProgram.getShaderProgram(), "tex"), 0);
 
         // the field of view
         GLfloat fov = 45.0f;
@@ -126,9 +110,8 @@ int main(int args, char* argv[]) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             glUseProgram(shaderProgram.getShaderProgram());
-            glActiveTexture(GL_TEXTURE0);
-            glUniform1i(glGetUniformLocation(shaderProgram.getShaderProgram(), "ourTexture"), 0);
-            glBindTexture(GL_TEXTURE_2D, texture);
+            // glActiveTexture(GL_TEXTURE0);
+            // glUniform1i(glGetUniformLocation(shaderProgram.getShaderProgram(), "ourTexture"), 0);
 
             if (renderModel.isRotate) {
                 double currentTime = glfwGetTime();
@@ -167,8 +150,7 @@ int main(int args, char* argv[]) {
             }
             glUniformMatrix4fv(projectionMatrixLoc, 1, GL_TRUE, projectionMatrix);
 
-            glBindTexture(GL_TEXTURE_2D, texture);
-            glBindVertexArray(Render.getVAO().getVAO());
+            glBindVertexArray(render.getVAO().getVAO());
             glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
 
             // Swap front and back buffers
@@ -180,13 +162,13 @@ int main(int args, char* argv[]) {
 
         glBindTexture(GL_TEXTURE_2D, 0);
 
-        Render.cleanUp();
+        render.cleanUp();
         return 0;
 
-    } catch (const WindowException &e) {
-        cerr << "Window error: " << e.what() << endl;
     } catch (const RenderModelLoaderException &e) {
         cerr << "Rendering model error: " << e.what() << endl;
+    } catch (const WindowException &e) {
+        cerr << "Window error: " << e.what() << endl;
     } catch (const ShaderException &e) {
         cerr << "Shader error: " << e.what() << endl;
     } catch (const ShaderProgramException &e) {

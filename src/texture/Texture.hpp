@@ -23,12 +23,16 @@ struct ImageData {
 	uint32_t width;
     uint32_t height;
 	GLenum formatBMPImage;
+	GLuint texture;
 	const unsigned char * _pixelData; // BGR
 };
 
 class Texture {
 public:
 	explicit Texture(const std::string &path);
+
+	void bindTexture();
+	void cleanUp();
 
 	const ImageData &getImageData() const;
 
