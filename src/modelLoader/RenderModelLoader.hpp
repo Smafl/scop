@@ -66,17 +66,6 @@ private:
 */
 class RenderModelLoader {
 public:
-    GLfloat translationX = 0.0f;
-    GLfloat translationY = 0.0f;
-    GLfloat translationZ = 0.0f;
-    GLfloat delta = 0.05f;
-    GLfloat rotation = 0.0f;
-    bool isRotate = true;
-    bool textureMode = false;
-    GLfloat minZ = -5.0f;
-    GLfloat maxZ = 0.5f;
-    GLfloat scaleFactor = 0.075f;
-
     explicit RenderModelLoader(const std::string &path);
 
     const std::vector<GLfloat> &getFinalVertices() const;

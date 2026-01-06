@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include "../render/Render.hpp"
 #include <exception>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
@@ -64,10 +65,10 @@ class Window {
 public:
 	Window(const int width, const int height, const char *name);
 
-	GLFWwindow* getWindow() const;
 	int getScreenWidth() const;
 	int getScreenHeight() const;
 
+	void setUpUserInput(Render &render);
 	bool windowShouldClose() const;
 	void swapBuffers() const;
 

@@ -9,7 +9,6 @@
 #include "shaders/ShaderProgram.hpp"
 #include "render/Render.hpp"
 #include "matrixMath/MatrixTransform.hpp"
-#include "inputHandler/InputListener.hpp"
 #include "texture/Texture.hpp"
 
 using namespace std;
@@ -30,16 +29,15 @@ int main(int args, char* argv[]) {
         vector<GLfloat> vertices = renderModel.getFinalVertices();
         vector<GLuint> indices = renderModel.getFinalIndices();
 
-        Window windowInstance(width, height, windowName);
-        GLFWwindow *window = windowInstance.getWindow();
+        Window window(width, height, windowName);
 
         if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress)) {
             throw runtime_error("Failed to initialize GLAD");
         }
 
-        // Check OpenGL version
-        const GLubyte* version = glGetString(GL_VERSION);
-        cout << "OpenGL version: " << version << endl;
+        // // Check OpenGL version
+        // const GLubyte* version = glGetString(GL_VERSION);
+        // cout << "OpenGL version: " << version << endl;
 
         vector<Shader> shaders;
         Shader vertexShaderInstance("../src/shaderSources/final.vert", GL_VERTEX_SHADER);
@@ -56,30 +54,21 @@ int main(int args, char* argv[]) {
 
         Render render(vertices, indices, shaderProgram);
 
-        Texture texture("../textureSources/glass.bmp");
+        Texture texture("../textureSources/sky.bmp");
 
         glUniform1i(glGetUniformLocation(shaderProgram.getShaderProgram(), "tex"), 0);
 
-        float mixValue = 0.0f;  // 0.0 = colors, 1.0 = texture
-        float transitionSpeed = 1.0f;
-
         // the field of view
         GLfloat fov = 45.0f;
-        GLfloat aspect = (GLfloat)windowInstance.getScreenWidth() / (GLfloat)windowInstance.getScreenHeight();
+        GLfloat aspect = (GLfloat)window.getScreenWidth() / (GLfloat)window.getScreenHeight();
         GLfloat near = 0.1f;
         GLfloat far = 100.0f;
 
-        // Set user pointer for callback access
-        glfwSetWindowUserPointer(window, &renderModel);
-
-	    // Set input callback
-	    glfwSetKeyCallback(window, InputListener::key_callback);
-	    glfwSetMouseButtonCallback(window, InputListener::mouse_button_callback);
-	    glfwSetScrollCallback(window, InputListener::scroll_callback);
-
+        // Set up user input
+        window.setUpUserInput(render);
 
         // Loop until the user closes the window
-        while (!windowInstance.windowShouldClose()) {
+        while (!window.windowShouldClose()) {
             // Render here
 
             double currentTime = glfwGetTime();
@@ -91,33 +80,33 @@ int main(int args, char* argv[]) {
 
             glUseProgram(shaderProgram.getShaderProgram());
 
-            if (renderModel.isRotate) {
+            if (render.isRotate) {
                 if (deltaTime >= 1 / 60) {
-                    renderModel.rotation += 0.25f * deltaTime * 60.0f;
+                    render.rotation += 0.25f * deltaTime * 60.0f;
                 }
             }
 
-            if (renderModel.textureMode && mixValue < 1.0f) {
-                mixValue += transitionSpeed * deltaTime;
-                if (mixValue > 1.0f) mixValue = 1.0f;
-            } else if (!renderModel.textureMode && mixValue > 0.0f) {
-                mixValue -= transitionSpeed * deltaTime;
-                if (mixValue < 0.0f) mixValue = 0.0f;
+            if (render.textureMode && render.mixValue < 1.0f) {
+                render.mixValue += render.transitionSpeed * deltaTime;
+                if (render.mixValue > 1.0f) render.mixValue = 1.0f;
+            } else if (!render.textureMode && render.mixValue > 0.0f) {
+                render.mixValue -= render.transitionSpeed * deltaTime;
+                if (render.mixValue < 0.0f) render.mixValue = 0.0f;
             }
 
-            glUniform1f(glGetUniformLocation(shaderProgram.getShaderProgram(), "mixValue"), mixValue);
+            glUniform1f(glGetUniformLocation(shaderProgram.getShaderProgram(), "mixValue"), render.mixValue);
 
             GLfloat modelMatrix[16], projectionMatrix[16];
             GLfloat scale[16], rotate[16];
 
             MatrixTransform::loadIdentity(scale);
-            MatrixTransform::scale(scale, renderModel.scaleFactor);
+            MatrixTransform::scale(scale, render.scaleFactor);
 
             MatrixTransform::loadIdentity(rotate);
-            MatrixTransform::rotateY(rotate, renderModel.rotation);
+            MatrixTransform::rotateY(rotate, render.rotation);
             MatrixTransform::multiply(rotate, scale, modelMatrix);
 
-            MatrixTransform::translate(modelMatrix, renderModel.translationX, renderModel.translationY, renderModel.translationZ);
+            MatrixTransform::translate(modelMatrix, render.translationX, render.translationY, render.translationZ);
 
             MatrixTransform::loadIdentity(projectionMatrix);
             MatrixTransform::perspective(projectionMatrix, fov, aspect, near, far);
@@ -140,7 +129,7 @@ int main(int args, char* argv[]) {
             glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
 
             // Swap front and back buffers
-            windowInstance.swapBuffers();
+            window.swapBuffers();
 
             // Poll for and process events
             glfwPollEvents();

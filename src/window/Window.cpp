@@ -1,5 +1,6 @@
 #include "Window.hpp"
 #include "../inputHandler/InputListener.hpp"
+#include "../render/Render.hpp"
 #include <string>
 #include <iostream>
 #include <glad/gl.h>
@@ -76,10 +77,6 @@ Window::Window(const int width, const int height, const char *name)
 
 // getters //
 
-GLFWwindow *Window::getWindow() const {
-	return _window;
-}
-
 int Window::getScreenWidth() const {
 	return _width;
 }
@@ -89,6 +86,16 @@ int Window::getScreenHeight() const {
 }
 
 // other //
+
+void Window::setUpUserInput(Render &render) {
+	// Set user pointer for callback access
+	glfwSetWindowUserPointer(_window, &render);
+
+	// Set input callback
+	glfwSetKeyCallback(_window, InputListener::key_callback);
+	glfwSetMouseButtonCallback(_window, InputListener::mouse_button_callback);
+	glfwSetScrollCallback(_window, InputListener::scroll_callback);
+}
 
 /**
 * @brief Check if the window received a close request.

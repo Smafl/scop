@@ -24,6 +24,21 @@ private:
 
 class Render {
 public:
+	GLfloat translationX = 0.0f;
+    GLfloat translationY = 0.0f;
+    GLfloat translationZ = 0.0f;
+    GLfloat delta = 0.05f;
+    GLfloat rotation = 0.0f;
+    bool isRotate = true;
+    GLfloat minZ = -5.0f;
+    GLfloat maxZ = 0.5f;
+    GLfloat scaleFactor = 0.075f;
+
+	// Switch texture/color
+    bool textureMode = false;
+	float mixValue = 0.0f;  // 0.0 = colors, 1.0 = texture
+	float transitionSpeed = 1.0f;
+
 	explicit Render(std::vector<GLfloat> &vertices, std::vector<GLuint> &indices, ShaderProgram &shaderProgram);
 
 	VAO getVAO() const;
