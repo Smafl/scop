@@ -21,13 +21,12 @@ int main(int args, char* argv[]) {
     char *windowName = nullptr;
 
     if (args < 2) {
-        cout << "File with a model is mandatory after executable file name" << endl;
+        cout << "After executable file name model and texture source are mandatory" << endl;
         return 0;
     }
     try {
         RenderModelLoader renderModel(argv[1]);
-        vector<GLfloat> vertices = renderModel.getFinalVertices();
-        vector<GLuint> indices = renderModel.getFinalIndices();
+        Mesh mesh = renderModel.getMesh();
 
         Window window(width, height, windowName);
 
@@ -52,9 +51,9 @@ int main(int args, char* argv[]) {
         vertexShaderInstance.deleteShader();
         fragmentShaderInstance.deleteShader();
 
-        Render render(vertices, indices, shaderProgram);
+        Render render(mesh, shaderProgram);
 
-        Texture texture("../textureSources/sky.bmp");
+        Texture texture(argv[2]);
 
         glUniform1i(glGetUniformLocation(shaderProgram.getShaderProgram(), "tex"), 0);
 
@@ -79,6 +78,9 @@ int main(int args, char* argv[]) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             glUseProgram(shaderProgram.getShaderProgram());
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, texture.getTextureID());
 
             if (render.isRotate) {
                 if (deltaTime >= 1 / 60) {
@@ -125,8 +127,8 @@ int main(int args, char* argv[]) {
             }
             glUniformMatrix4fv(projectionMatrixLoc, 1, GL_TRUE, projectionMatrix);
 
-            glBindVertexArray(render.getVAO().getVAO());
-            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, 0);
+            glBindVertexArray(render.getVAO());
+            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh.indices.size()), GL_UNSIGNED_INT, 0);
 
             // Swap front and back buffers
             window.swapBuffers();

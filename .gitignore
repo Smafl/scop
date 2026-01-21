@@ -38,4 +38,4 @@ scop
 # Other
 .DS_Store
 .vscode
-notes.txt
+*.txt

@@ -4,10 +4,8 @@
 #include <vector>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
-#include "../openglBuffers/VAO.hpp"
-#include "../openglBuffers/VBO.hpp"
-#include "../openglBuffers/EBO.hpp"
 #include "../shaders/ShaderProgram.hpp"
+#include "../modelLoader/RenderModelLoader.hpp"
 
 class RenderException : public std::exception {
 public:
@@ -39,17 +37,16 @@ public:
 	float mixValue = 0.0f;  // 0.0 = colors, 1.0 = texture
 	float transitionSpeed = 1.0f;
 
-	explicit Render(std::vector<GLfloat> &vertices, std::vector<GLuint> &indices, ShaderProgram &shaderProgram);
+	explicit Render(Mesh &mesh, ShaderProgram &shaderProgram);
 
-	VAO getVAO() const;
+	GLuint getVAO() const;
 	void glSettings();
 	void cleanUp();
 
 private:
-	VAO _vao;
-	EBO _ebo;
-	VBO _vbo;
+	GLuint _VAO, _VBO_pos, _VBO_tex, _VBO_norm, _EBO;
 	ShaderProgram _shaderProgram;
+	Mesh _mesh;
 
 	Render();
 };

@@ -1,30 +1,10 @@
-
-/**
-* @file RenderModelLoader.hpp
-* @brief Minimal Wavefront OBJ loader for OpenGL rendering.
-*
-* This module parses geometry data from an OBJ file and prepares
-* vertex and index buffers suitable for OpenGL rendering.
-*
-* Supported OBJ elements:
-*  - v   (vertex positions)
-*  - vt  (texture coordinates)
-*  - vn  (normal vectors)
-*  - f   (faces, triangulated using triangle fan)
-*
-* Unsupported / ignored:
-*  - Materials (.mtl)
-*  - Multiple objects / groups
-*  - Negative indices
-*/
-
 #pragma once
 
+#include <exception>
 #include <vector>
 #include <string>
-#include <exception>
-#include <glad/gl.h>
 #include <sstream>
+#include <glad/gl.h>
 
 /**
 * @class RenderModelLoaderException
@@ -51,6 +31,31 @@ private:
 };
 
 
+struct Vertex {
+    GLfloat x, y, z;
+};
+
+struct TexCoord {
+    GLfloat u, v;
+};
+
+struct Normal {
+    GLfloat x, y, z;
+};
+
+struct FaceVertex {
+    GLint vertexIndex;
+    GLint texCoordIndex;
+    GLint normalIndex;
+};
+
+struct Mesh {
+    std::vector<GLfloat> vertices;
+    std::vector<GLfloat> texCoords;
+    std::vector<GLfloat> normals;
+    std::vector<GLuint> indices;
+};
+
 /**
 * @class RenderModelLoader
 * @brief Represents a renderable 3D model loaded from an OBJ file.
@@ -68,32 +73,19 @@ class RenderModelLoader {
 public:
     explicit RenderModelLoader(const std::string &path);
 
-    const std::vector<GLfloat> &getFinalVertices() const;
-    const std::vector<GLuint> &getFinalIndices() const;
-
-    const std::vector<GLfloat> &getVertices() const;
-    const std::vector<GLfloat> &getTextures() const;
-    const std::vector<GLuint> &getNormals() const;
-
-    const std::vector<GLuint> &getVIndices() const;
-    const std::vector<GLuint> &getVtIndices() const;
-    const std::vector<GLuint> &getVnIndices() const;
+    const Mesh &getMesh() const;
 
 private:
-    std::vector<GLfloat> _finalVertices;
-    std::vector<GLuint>  _finalIndices; // not implemented
+    Mesh _mesh;
 
-    std::vector<GLfloat> _vertices;
-    std::vector<GLfloat> _texture;
-    std::vector<GLuint> _normals;
-
-    std::vector<GLuint> _vIndices;
-    std::vector<GLuint> _vtIndices;
-    std::vector<GLuint> _vnIndices;
+    std::vector<Vertex> _vertex;
+    std::vector<TexCoord> _texcoord;
+    std::vector<Normal> _normal;
+    std::vector<std::vector<FaceVertex>> _faces;
 
     std::string _path;
 
-    void generateFinalVertices();
     void parseFaces(std::istringstream &line);
+    void buildMesh();
     RenderModelLoader();
 };

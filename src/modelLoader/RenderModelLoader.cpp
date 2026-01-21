@@ -2,14 +2,11 @@
 #include <exception>
 #include <string>
 #include <vector>
-#include <array>
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <initializer_list>
 #include <glad/gl.h>
-#include <map>
-#include <cfloat>  // FLT_MAX
-#include <algorithm>  // min/max
 
 using namespace std;
 
@@ -46,25 +43,21 @@ RenderModelLoader::RenderModelLoader(const string &path) :
 	}
 
 	string line, type;
-	GLfloat x, y, z;
 	while (getline(file, line)) {
 		istringstream sline(line);
 		sline >> type;
 		if (type == "v") {
-			sline >> x >> y >> z;
-			_vertices.push_back(x);
-			_vertices.push_back(y);
-			_vertices.push_back(z);
-			_vertices.push_back(1.0);
+			Vertex vertex;
+			sline >> vertex.x >> vertex.y >> vertex.z;
+			_vertex.push_back(vertex);
 		} else if (type == "vt") {
-			sline >> x >> y;
-			_texture.push_back(x);
-			_texture.push_back(y);
+			TexCoord textCoord;
+			sline >> textCoord.u >> textCoord.v;
+			_texcoord.push_back(textCoord);
 		} else if (type == "vn") {
-			sline >> x >> y >> z;
-			_normals.push_back(x);
-			_normals.push_back(y);
-			_normals.push_back(z);
+			Normal normal;
+			sline >> normal.x >> normal.y >> normal.z;
+			_normal.push_back(normal);
 		} else if (type == "f") {
 			parseFaces(sline);
 		} else if (type == "o") {
@@ -77,163 +70,55 @@ RenderModelLoader::RenderModelLoader(const string &path) :
 	}
 	file.close();
 
-	if (_vertices.empty() || _vIndices.empty()) {
-		throw RenderModelLoaderException(RenderModelLoaderException::UNKNOWN_ERROR);
+	buildMesh();
+
+	// std::cout << "Mesh stats:\n";
+	// std::cout << "Vertices: " << _mesh.vertices.size() / 3 << "\n";
+	// std::cout << "TexCoords: " << _mesh.texCoords.size() / 2 << "\n";
+	// std::cout << "First few UV coords:\n";
+	// for (size_t i = 0; i < std::min(_mesh.texCoords.size(), size_t(10)); i += 2) {
+	//     std::cout << "  UV: " << _mesh.texCoords[i] << ", " << _mesh.texCoords[i+1] << "\n";
+	// }
+}
+
+void RenderModelLoader::buildMesh() {
+	GLuint currentIndex = 0;
+
+	for (const auto &face : _faces) {
+		for (size_t i = 1; i < face.size() -1; i++) {
+			for (size_t j : initializer_list<size_t>{0, i, i + 1}) {
+				const FaceVertex &fv = face[j]
+;				// Add vertex
+                if (fv.vertexIndex >= 0 && (size_t)fv.vertexIndex < _vertex.size()) {
+                    const Vertex& v = _vertex[fv.vertexIndex];
+                    _mesh.vertices.push_back(v.x);
+                    _mesh.vertices.push_back(v.y);
+                    _mesh.vertices.push_back(v.z);
+                }
+                // Add texture coordinate
+                if (fv.texCoordIndex >= 0 && (size_t)fv.texCoordIndex < _texcoord.size()) {
+                    const TexCoord& vt = _texcoord[fv.texCoordIndex];
+                    _mesh.texCoords.push_back(vt.u);
+                    _mesh.texCoords.push_back(vt.v);
+                } else {
+                    _mesh.texCoords.push_back(0.0f);
+                    _mesh.texCoords.push_back(0.0f);
+                }
+                // Add normal
+                if (fv.normalIndex >= 0 && (size_t)fv.normalIndex < _normal.size()) {
+                    const Normal& vn = _normal[fv.normalIndex];
+                    _mesh.normals.push_back(vn.x);
+                    _mesh.normals.push_back(vn.y);
+                    _mesh.normals.push_back(vn.z);
+                } else {
+                    _mesh.normals.push_back(0.0f);
+                    _mesh.normals.push_back(0.0f);
+                    _mesh.normals.push_back(1.0f);
+                }
+				_mesh.indices.push_back(currentIndex++);
+			}
+		}
 	}
-
-	generateFinalVertices();
-}
-
-void RenderModelLoader::generateFinalVertices() {
-    _finalVertices.clear();
-    _finalIndices.clear();
-
-    // Calculate bounding box for UV generation
-    GLfloat minX = 1e10f, maxX = -1e10f;
-    GLfloat minY = 1e10f, maxY = -1e10f;
-    GLfloat minZ = 1e10f, maxZ = -1e10f;
-
-    for (size_t i = 0; i < _vertices.size(); i += 4) {
-        if (_vertices[i] < minX) minX = _vertices[i];
-        if (_vertices[i] > maxX) maxX = _vertices[i];
-        if (_vertices[i + 1] < minY) minY = _vertices[i + 1];
-        if (_vertices[i + 1] > maxY) maxY = _vertices[i + 1];
-        if (_vertices[i + 2] < minZ) minZ = _vertices[i + 2];
-        if (_vertices[i + 2] > maxZ) maxZ = _vertices[i + 2];
-    }
-
-    GLfloat rangeX = maxX - minX;
-    GLfloat rangeY = maxY - minY;
-    GLfloat rangeZ = maxZ - minZ;
-
-    if (rangeX < 0.0001f) rangeX = 1.0f;
-    if (rangeY < 0.0001f) rangeY = 1.0f;
-    if (rangeZ < 0.0001f) rangeZ = 1.0f;
-
-    map<string, GLuint> uniqueVertices;
-    bool hasTextureCoords = !_texture.empty() && !_vtIndices.empty();
-    bool hasNormals = !_normals.empty() && !_vnIndices.empty();
-
-    for (size_t i = 0; i < _vIndices.size(); i++) {
-        GLuint vIdx = _vIndices[i];
-        GLuint vtIdx = (i < _vtIndices.size()) ? _vtIndices[i] : 0;
-        GLuint vnIdx = (i < _vnIndices.size()) ? _vnIndices[i] : 0;
-
-        string key = to_string(vIdx) + "/" + to_string(vtIdx) + "/" + to_string(vnIdx);
-
-        if (uniqueVertices.find(key) == uniqueVertices.end()) {
-            GLuint newIndex = static_cast<GLuint>(_finalVertices.size() / 8);  // Now 8 floats per vertex!
-            uniqueVertices[key] = newIndex;
-
-            // Position (x, y, z)
-            GLfloat posX = _vertices[vIdx * 4];
-            GLfloat posY = _vertices[vIdx * 4 + 1];
-            GLfloat posZ = _vertices[vIdx * 4 + 2];
-
-            _finalVertices.push_back(posX);
-            _finalVertices.push_back(posY);
-            _finalVertices.push_back(posZ);
-
-            // Texture coordinates (u, v)
-            if (hasTextureCoords && vtIdx * 2 + 1 < _texture.size()) {
-                _finalVertices.push_back(_texture[vtIdx * 2]);
-                _finalVertices.push_back(_texture[vtIdx * 2 + 1]);
-            } else {
-                GLfloat u = (posX - minX) / rangeX;
-                GLfloat v = (posY - minY) / rangeY;
-                _finalVertices.push_back(u);
-                _finalVertices.push_back(v);
-            }
-
-            // Color based on normal direction (to distinguish sides)
-            GLfloat r, g, b;
-            if (hasNormals && vnIdx * 3 + 2 < _normals.size()) {
-                // Use normal direction to determine color
-                GLfloat nx = _normals[vnIdx * 3];
-                GLfloat ny = _normals[vnIdx * 3 + 1];
-                GLfloat nz = _normals[vnIdx * 3 + 2];
-
-                // Map normal direction to color
-                // Faces pointing in different directions get different colors
-                r = (nx + 1.0f) * 0.5f;  // Map -1..1 to 0..1
-                g = (ny + 1.0f) * 0.5f;
-                b = (nz + 1.0f) * 0.5f;
-            } else {
-                // Fallback: use position-based coloring
-                r = (posX - minX) / rangeX;
-                g = (posY - minY) / rangeY;
-                b = (posZ - minZ) / rangeZ;
-            }
-
-            _finalVertices.push_back(r);
-            _finalVertices.push_back(g);
-            _finalVertices.push_back(b);
-        }
-
-        _finalIndices.push_back(uniqueVertices[key]);
-    }
-
-    if (!hasTextureCoords) {
-        cout << "Note: Model has no UV coordinates, using auto-generated planar mapping" << endl;
-    }
-}
-
-// getters
-
-const vector<GLfloat> &RenderModelLoader::getFinalVertices() const {
-	return _finalVertices;
-}
-
-const vector<GLuint> &RenderModelLoader::getFinalIndices() const {
-	return _finalIndices;
-}
-
-const vector<GLfloat> &RenderModelLoader::getVertices() const {
-	return _vertices;
-}
-
-const vector<GLfloat> &RenderModelLoader::getTextures() const {
-	return _texture;
-}
-
-const vector<GLuint> &RenderModelLoader::getNormals() const {
-	return _normals;
-}
-
-const vector<GLuint> &RenderModelLoader::getVIndices() const {
-	return _vIndices;
-}
-
-const vector<GLuint> &RenderModelLoader::getVtIndices() const {
-	return _vtIndices;
-}
-
-const vector<GLuint> &RenderModelLoader::getVnIndices() const {
-	return _vnIndices;
-}
-
-// private //
-
-array<string, 3> getTokenValues(string &token) {
-	array<string, 3> tokenValues = {"", "", ""};
-
-	size_t slash = token.find('/');
-	if (slash == string::npos) {
-		tokenValues[0] = token;
-		return tokenValues;
-	}
-
-	size_t slash2 = token.find('/', slash + 1);
-	tokenValues[0] = token.substr(0, slash);
-
-	if (slash2 == string::npos) {
-		tokenValues[1] = token.substr(slash + 1);
-	} else {
-		tokenValues[1] = token.substr(slash + 1, slash2 - slash - 1);
-		tokenValues[2] = token.substr(slash2 + 1);
-	}
-
-	return tokenValues;
 }
 
 /**
@@ -252,76 +137,36 @@ array<string, 3> getTokenValues(string &token) {
 * @throws RenderModelLoaderException on invalid format or index errors.
 */
 void RenderModelLoader::parseFaces(istringstream &line) {
-	vector<array<string, 3>> tokens;
+	vector<FaceVertex> face;
 	string token;
 
 	while (line >> token) {
-		tokens.push_back(getTokenValues(token));
-	}
+		FaceVertex fv = {-1, -1, -1};
 
-	int tokensSize = tokens.size();
-	if (tokensSize < 3) {
-		throw RenderModelLoaderException(RenderModelLoaderException::INVALID_FACE_FORMAT);
-	}
+		size_t pos1 = token.find('/');
+		if (pos1 == string::npos) {
+			// Format v
+			fv.vertexIndex = stoi(token) - 1;
+		} else {
+			fv.vertexIndex = stoi(token.substr(0, pos1)) - 1;
 
-	size_t maxVertexIndex = (_vertices.size() / 4);
-	size_t maxTextureIndex = (_texture.size() / 2);
-	size_t maxNormalIndex = (_normals.size() / 3);
-
-	// how many triangles: tokensSize - 2
-	for (int i = 1; i + 1 != tokensSize; i++) {
-		try {
-			// Vertex indices
-			if ((!tokens[0][0].empty()) && (!tokens[i][0].empty()) && (!tokens[i + 1][0].empty())) {
-				GLuint idx0 = stoul(tokens[0][0]) - 1;
-				GLuint idx1 = stoul(tokens[i][0]) - 1;
-				GLuint idx2 = stoul(tokens[i + 1][0]) - 1;
-
-				// Validate indices
-				if (idx0 >= maxVertexIndex || idx1 >= maxVertexIndex || idx2 >= maxVertexIndex) {
-					throw RenderModelLoaderException(RenderModelLoaderException::INDEX_OUT_OF_RANGE);
+			size_t pos2 = token.find('/', pos1 + 1);
+			if (pos2 == string::npos) {
+				// Format v/vt
+				fv.texCoordIndex = stoi(token.substr(pos1 + 1)) - 1;
+			} else {
+				// Format v/vt/vn or v//vn
+				if (pos2 > pos1 + 1) {
+					fv.texCoordIndex = stoi(token.substr(pos1 + 1, pos2 - pos1 - 1)) - 1;
 				}
-
-				_vIndices.push_back(idx0);
-				_vIndices.push_back(idx1);
-				_vIndices.push_back(idx2);
+				fv.normalIndex = stoi(token.substr(pos2 + 1)) - 1;
 			}
-
-			// Texture coordinate indices
-			if ((!tokens[0][1].empty()) && (!tokens[i][1].empty()) && (!tokens[i + 1][1].empty())) {
-				GLuint idx0 = stoul(tokens[0][1]) - 1;
-				GLuint idx1 = stoul(tokens[i][1]) - 1;
-				GLuint idx2 = stoul(tokens[i + 1][1]) - 1;
-
-				// Validate indices
-				if (idx0 >= maxTextureIndex || idx1 >= maxTextureIndex || idx2 >= maxTextureIndex) {
-					throw RenderModelLoaderException(RenderModelLoaderException::INDEX_OUT_OF_RANGE);
-				}
-
-				_vtIndices.push_back(idx0);
-				_vtIndices.push_back(idx1);
-				_vtIndices.push_back(idx2);
-			}
-
-			// Normal indices
-			if ((!tokens[0][2].empty()) && (!tokens[i][2].empty()) && (!tokens[i + 1][2].empty())) {
-				GLuint idx0 = stoul(tokens[0][2]) - 1;
-				GLuint idx1 = stoul(tokens[i][2]) - 1;
-				GLuint idx2 = stoul(tokens[i + 1][2]) - 1;
-
-				// Validate indices
-				if (idx0 >= maxNormalIndex || idx1 >= maxNormalIndex || idx2 >= maxNormalIndex) {
-					throw RenderModelLoaderException(RenderModelLoaderException::INDEX_OUT_OF_RANGE);
-				}
-
-				_vnIndices.push_back(idx0);
-				_vnIndices.push_back(idx1);
-				_vnIndices.push_back(idx2);
-			}
-    	} catch (const invalid_argument&) {
-    	    throw RenderModelLoaderException(RenderModelLoaderException::INVALID_FACE_FORMAT);
-    	} catch (const out_of_range&) {
-    	    throw RenderModelLoaderException(RenderModelLoaderException::INDEX_OUT_OF_RANGE);
-    	}
+		}
+		face.push_back(fv);
 	}
+	_faces.push_back(face);
+}
+
+const Mesh &RenderModelLoader::getMesh() const {
+	return _mesh;
 }

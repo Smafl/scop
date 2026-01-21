@@ -22,6 +22,7 @@ class Texture {
 public:
 	explicit Texture(const std::string &path);
 
+	GLuint getTextureID() const;
 	void unbindTexture();
 
 private:

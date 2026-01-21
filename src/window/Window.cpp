@@ -44,13 +44,13 @@ Window::Window(const int width, const int height, const char *name)
 	}
 
 	if (_windowName == nullptr || _windowName[0] == '\0') {
-		_windowName = "Hello triangle";
+		_windowName = "〔^▴^〕(^.^)〈°⥿°〉";
 	}
 
 	getResolution();
 
-	_width = (width <= 0) ? (_maxWidth / 2) : width;
-	_height = (height <= 0) ? (_maxHeight / 2) : height;
+	_width = (width <= 0) ? (_maxWidth) : width; // (_maxWidth / 2)
+	_height = (height <= 0) ? (_maxHeight) : height; // (_maxHeight / 2)
 
 	if (_width <= 0 || _height <= 0) {
 		throw WindowException(WindowException::INVALID_RESOLUTION);

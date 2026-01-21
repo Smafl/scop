@@ -35,64 +35,60 @@ const char *BMPLoaderException::what() const noexcept {
 }
 
 BMPLoader::BMPLoader(const string &path)
-	: _path(path)
+    : _path(path)
 {
-	cout << "BMP is starting loading from " << _path << endl;
+    cout << "BMP is starting loading from " << _path << endl;
+    if (_path.empty()) {
+        throw BMPLoaderException(BMPLoaderException::FILE_NOT_FOUND, _path);
+    }
 
-	if (_path.empty()) {
-		throw BMPLoaderException(BMPLoaderException::FILE_NOT_FOUND, _path);
-	}
+    _path = "../" + path;
+    FILE* file = fopen(_path.c_str(), "rb");
+    if (!file) {
+        throw BMPLoaderException(BMPLoaderException::CANNOT_OPEN, _path);
+    }
 
-	FILE* file = fopen(_path.c_str(), "rb");
-	if (!file) {
-		throw BMPLoaderException(BMPLoaderException::CANNOT_OPEN, _path);
-	}
+    fread(&_bmpHeader, sizeof(Header), 1, file);
+    if (_bmpHeader.signature != 0x4D42) {
+        fclose(file);
+        throw BMPLoaderException(BMPLoaderException::INVALID_FORMAT, _path);
+    }
 
-	fread(&_bmpHeader, sizeof(Header), 1, file);
+    channels = _bmpHeader.bitsPerPixel / 8;
+    if (channels != 3 && channels != 4) {
+        fclose(file);
+        throw BMPLoaderException(BMPLoaderException::INVALID_FORMAT, _path);
+    }
 
-	if (_bmpHeader.signature != 0x4D42) {
-		fclose(file);
-		throw BMPLoaderException(BMPLoaderException::INVALID_FORMAT, _path);
-	}
+    // Calculate row size WITH padding (rows are padded to 4-byte boundary)
+    int rowSizePadded = ((_bmpHeader.width * _bmpHeader.bitsPerPixel + 31) / 32) * 4;
+    // Calculate row size WITHOUT padding
+    int rowSize = _bmpHeader.width * channels;
 
-	size_t pixelDataSize = _bmpHeader.fileSize - _bmpHeader.dataOffset;
-	_pixelData.resize(pixelDataSize);  // Allocate memory in the vector
-	fseek(file, _bmpHeader.dataOffset, SEEK_SET);
-	fread(_pixelData.data(), 1, pixelDataSize, file);
-	if (_pixelData.empty()) {
-		throw BMPLoaderException(BMPLoaderException::INVALID_FORMAT, _path);
-	}
-	fclose(file);
+    // Read the padded data from file
+    vector<unsigned char> paddedData(rowSizePadded * _bmpHeader.height);
+    fseek(file, _bmpHeader.dataOffset, SEEK_SET);
+    fread(paddedData.data(), 1, paddedData.size(), file);
+    fclose(file);
 
-	channels = _bmpHeader.bitsPerPixel / 8;
+    // Allocate final buffer without padding, and flip vertically
+    _pixelData.resize(_bmpHeader.width * _bmpHeader.height * channels);
 
-	// channels = _bmpHeader.bitsPerPixel / 8;
-    // if (channels != 3 && channels != 4) {
-    //     fclose(file);
-    //     throw BMPLoaderException(BMPLoaderException::INVALID_FORMAT, _path);
+    unsigned char* dstRow;
+    // Copy row by row, removing padding and flipping
+    for (uint32_t y = 0; y < _bmpHeader.height; ++y) {
+        dstRow = &_pixelData[y * rowSize];
+        // Read from bottom to top (flip vertically)
+        unsigned char* srcRow = &paddedData[(_bmpHeader.height - 1 - y) * rowSizePadded];
+        memcpy(dstRow, srcRow, rowSize);
+    }
+
+    // for (size_t i = 0; i < _pixelData.size(); i += channels) {
+    //     std::swap(_pixelData[i], _pixelData[i + 2]); // Swap B and R channels
     // }
 
-    // // Calculate padded row size in file
-    // int rowSize = ((_bmpHeader.bitsPerPixel * _bmpHeader.width + 31) / 32) * 4;
-
-    // // Allocate temporary buffer for file data
-    // std::vector<unsigned char> fileData(rowSize * _bmpHeader.height);
-
-    // fseek(file, _bmpHeader.dataOffset, SEEK_SET);
-    // fread(fileData.data(), 1, fileData.size(), file);
-    // fclose(file);
-
-    // // Allocate final pixel buffer (without padding)
-    // _pixelData.resize(_bmpHeader.width * _bmpHeader.height * channels);
-
-    // // Copy row by row, flipping vertically
-    // for (uint32_t y = 0; y < _bmpHeader.height; ++y) {
-    //     unsigned char* dstRow = &_pixelData[y * _bmpHeader.width * channels];
-    //     unsigned char* srcRow = &fileData[(_bmpHeader.height - 1 - y) * rowSize];
-    //     memcpy(dstRow, srcRow, _bmpHeader.width * channels);
-    // }
-
-	cout << "BMP was loaded from " << _path << endl;
+    // cout << "BMP loaded: " << _bmpHeader.width << "x" << _bmpHeader.height
+    //      << ", " << channels << " channels" << endl;
 }
 
 const Header *BMPLoader::getBMPHeader() const {
