@@ -27,6 +27,7 @@ SRC =	src/main.cpp\
 		glad.cpp\
 		src/modelLoader/RenderModelLoader.cpp\
 		src/window/Window.cpp\
+		src/window/Camera.cpp\
 		src/inputHandler/InputListener.cpp\
 		src/shaders/Shader.cpp\
 		src/shaders/ShaderProgram.cpp\

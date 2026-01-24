@@ -8,7 +8,6 @@
 #include <sstream>
 #include <glad/gl.h>
 #include <map>
-#include <cfloat>  // FLT_MAX
 #include <algorithm>  // min/max
 
 using namespace std;
@@ -27,6 +26,7 @@ const char *RenderModelLoaderException::what() const noexcept {
 	}
 }
 
+
 /**
 * @brief Loads and parses an OBJ file.
 * @param path Path to the OBJ file.
@@ -39,6 +39,17 @@ RenderModelLoader::RenderModelLoader(const string &path) :
 		throw RenderModelLoaderException(RenderModelLoaderException::FILE_NOT_FOUND);
 	}
 
+	parseOBJFile();
+	calculateNormals();
+
+	if (_raw.vertices.empty() || _raw.vIndices.empty()) {
+		throw RenderModelLoaderException(RenderModelLoaderException::UNKNOWN_ERROR);
+	}
+
+	buildMesh();
+}
+
+void RenderModelLoader::parseOBJFile() {
 	ifstream file;
 	file.open(_path);
 	if (!file.is_open()) {
@@ -52,19 +63,19 @@ RenderModelLoader::RenderModelLoader(const string &path) :
 		sline >> type;
 		if (type == "v") {
 			sline >> x >> y >> z;
-			_vertices.push_back(x);
-			_vertices.push_back(y);
-			_vertices.push_back(z);
-			_vertices.push_back(1.0);
+			_raw.vertices.push_back(x);
+			_raw.vertices.push_back(y);
+			_raw.vertices.push_back(z);
+			_raw.vertices.push_back(1.0);
 		} else if (type == "vt") {
 			sline >> x >> y;
-			_texture.push_back(x);
-			_texture.push_back(y);
+			_raw.texCoords.push_back(x);
+			_raw.texCoords.push_back(y);
 		} else if (type == "vn") {
 			sline >> x >> y >> z;
-			_normals.push_back(x);
-			_normals.push_back(y);
-			_normals.push_back(z);
+			_raw.normals.push_back(x);
+			_raw.normals.push_back(y);
+			_raw.normals.push_back(z);
 		} else if (type == "f") {
 			parseFaces(sline);
 		} else if (type == "o") {
@@ -75,141 +86,237 @@ RenderModelLoader::RenderModelLoader(const string &path) :
 			; // to implement later
 		}
 	}
+
 	file.close();
-
-	if (_vertices.empty() || _vIndices.empty()) {
-		throw RenderModelLoaderException(RenderModelLoaderException::UNKNOWN_ERROR);
-	}
-
-	generateFinalVertices();
 }
 
-void RenderModelLoader::generateFinalVertices() {
-    _finalVertices.clear();
-    _finalIndices.clear();
+void RenderModelLoader::calculateBoundingBox() {
+	for (size_t i = 0; i < _raw.vertices.size(); i += 4) {
+		_bbox.minX = min(_bbox.minX, _raw.vertices[i]);
+		_bbox.maxX = max(_bbox.maxX, _raw.vertices[i]);
+		_bbox.minY = min(_bbox.minY, _raw.vertices[i + 1]);
+		_bbox.maxY = max(_bbox.maxY, _raw.vertices[i + 1]);
+		_bbox.minZ = min(_bbox.minZ, _raw.vertices[i + 2]);
+		_bbox.maxZ = max(_bbox.maxZ, _raw.vertices[i + 2]);
+	}
+}
 
-    // Calculate bounding box for UV generation
-    GLfloat minX = 1e10f, maxX = -1e10f;
-    GLfloat minY = 1e10f, maxY = -1e10f;
-    GLfloat minZ = 1e10f, maxZ = -1e10f;
+void RenderModelLoader::calculateCubicUV() {
+	GLfloat u, v;
 
-    for (size_t i = 0; i < _vertices.size(); i += 4) {
-        if (_vertices[i] < minX) minX = _vertices[i];
-        if (_vertices[i] > maxX) maxX = _vertices[i];
-        if (_vertices[i + 1] < minY) minY = _vertices[i + 1];
-        if (_vertices[i + 1] > maxY) maxY = _vertices[i + 1];
-        if (_vertices[i + 2] < minZ) minZ = _vertices[i + 2];
-        if (_vertices[i + 2] > maxZ) maxZ = _vertices[i + 2];
+    // Find which axis the normal is most aligned with
+    GLfloat absNX = fabs(_nx);
+    GLfloat absNY = fabs(_ny);
+    GLfloat absNZ = fabs(_nz);
+
+    if (absNX >= absNY && absNX >= absNZ) {
+        // X-dominant face - project from YZ plane
+        u = (_posZ - _bbox.minZ) / _bbox.getRangeZ();
+        v = (_posY - _bbox.minY) / _bbox.getRangeY();
+    } else if (absNY >= absNX && absNY >= absNZ) {
+        // Y-dominant face - project from XZ plane
+        u = (_posX - _bbox.minX) / _bbox.getRangeX();
+        v = (_posZ - _bbox.minZ) / _bbox.getRangeZ();
+    } else {
+        // Z-dominant face - project from XY plane
+        u = (_posX - _bbox.minX) / _bbox.getRangeX();
+        v = (_posY - _bbox.minY) / _bbox.getRangeY();
     }
 
-    GLfloat rangeX = maxX - minX;
-    GLfloat rangeY = maxY - minY;
-    GLfloat rangeZ = maxZ - minZ;
+	_mesh.vertices.push_back(u);
+	_mesh.vertices.push_back(v);
+}
 
-    if (rangeX < 0.0001f) rangeX = 1.0f;
-    if (rangeY < 0.0001f) rangeY = 1.0f;
-    if (rangeZ < 0.0001f) rangeZ = 1.0f;
+void RenderModelLoader::calculateUVCoordinates(GLuint vtIdx, GLuint vnIdx) {
+	if (_raw.hasTexCoords() && vtIdx * 2 + 1 < _raw.texCoords.size()) {
+		_mesh.vertices.push_back(_raw.texCoords[vtIdx * 2]);
+		_mesh.vertices.push_back(_raw.texCoords[vtIdx * 2 + 1]);
+	} else {
+		if (_raw.hasNormals() && vnIdx * 3 + 2 < _raw.normals.size()) {
+			// Use cubic/box mapping based on normal direction
+			_nx = _raw.normals[vnIdx * 3];
+            _ny = _raw.normals[vnIdx * 3 + 1];
+            _nz = _raw.normals[vnIdx * 3 + 2];
+
+			calculateCubicUV();
+		} else {
+			// Fallback to simple planar mapping
+			GLfloat u = (_posX - _bbox.minX) / _bbox.getRangeX();
+			GLfloat v = (_posY - _bbox.minY) / _bbox.getRangeY();
+			_mesh.vertices.push_back(u);
+			_mesh.vertices.push_back(v);
+		}
+	}
+}
+
+void RenderModelLoader::calculateVertexColor(GLuint vnIdx) {
+	// Color based on normal direction (to distinguish sides)
+	GLfloat r, g, b;
+	if (_raw.hasNormals() && vnIdx * 3 + 2 < _raw.normals.size()) {
+		// Use normal direction to determine color
+		GLfloat nx = _raw.normals[vnIdx * 3];
+		GLfloat ny = _raw.normals[vnIdx * 3 + 1];
+		GLfloat nz = _raw.normals[vnIdx * 3 + 2];
+
+		// Map normal direction to color
+		// Faces pointing in different directions get different colors
+		r = (nx + 1.0f) * 0.5f;  // Map -1..1 to 0..1
+		g = (ny + 1.0f) * 0.5f;
+		b = (nz + 1.0f) * 0.5f;
+	} else {
+		// Fallback: use position-based coloring
+		r = (_posX - _bbox.minX) / _bbox.getRangeX();
+		g = (_posY - _bbox.minY) / _bbox.getRangeY();
+		b = (_posZ - _bbox.minZ) / _bbox.getRangeZ();
+	}
+
+	_mesh.vertices.push_back(r);
+	_mesh.vertices.push_back(g);
+	_mesh.vertices.push_back(b);
+}
+
+void RenderModelLoader::calculateNormals() {
+    if (!_raw.normals.empty()) {
+        return;
+    }
+
+    std::cout << "No normals found, calculating from geometry...\n";
+
+    // Reserve space for per-vertex normals (initialized to zero)
+    _raw.normals.resize(_raw.vertices.size() / 4 * 3, 0.0f);
+    _raw.vnIndices.resize(_raw.vIndices.size());
+
+    // Calculate face normals and accumulate at vertices
+    for (size_t i = 0; i < _raw.vIndices.size(); i += 3) {
+        GLuint idx0 = _raw.vIndices[i];
+        GLuint idx1 = _raw.vIndices[i + 1];
+        GLuint idx2 = _raw.vIndices[i + 2];
+
+        // Get triangle vertices
+        GLfloat v0x = _raw.vertices[idx0 * 4];
+        GLfloat v0y = _raw.vertices[idx0 * 4 + 1];
+        GLfloat v0z = _raw.vertices[idx0 * 4 + 2];
+
+        GLfloat v1x = _raw.vertices[idx1 * 4];
+        GLfloat v1y = _raw.vertices[idx1 * 4 + 1];
+        GLfloat v1z = _raw.vertices[idx1 * 4 + 2];
+
+        GLfloat v2x = _raw.vertices[idx2 * 4];
+        GLfloat v2y = _raw.vertices[idx2 * 4 + 1];
+        GLfloat v2z = _raw.vertices[idx2 * 4 + 2];
+
+        // Calculate edge vectors
+        GLfloat e1x = v1x - v0x;
+        GLfloat e1y = v1y - v0y;
+        GLfloat e1z = v1z - v0z;
+
+        GLfloat e2x = v2x - v0x;
+        GLfloat e2y = v2y - v0y;
+        GLfloat e2z = v2z - v0z;
+
+        // Cross product: normal = e1 × e2
+        GLfloat nx = e1y * e2z - e1z * e2y;
+        GLfloat ny = e1z * e2x - e1x * e2z;
+        GLfloat nz = e1x * e2y - e1y * e2x;
+
+        // Normalize
+        GLfloat len = sqrt(nx*nx + ny*ny + nz*nz);
+        if (len > 0.0001f) {
+            nx /= len;
+            ny /= len;
+            nz /= len;
+        }
+
+        // Accumulate normal at each vertex
+        _raw.normals[idx0 * 3]     += nx;
+        _raw.normals[idx0 * 3 + 1] += ny;
+        _raw.normals[idx0 * 3 + 2] += nz;
+
+        _raw.normals[idx1 * 3]     += nx;
+        _raw.normals[idx1 * 3 + 1] += ny;
+        _raw.normals[idx1 * 3 + 2] += nz;
+
+        _raw.normals[idx2 * 3]     += nx;
+        _raw.normals[idx2 * 3 + 1] += ny;
+        _raw.normals[idx2 * 3 + 2] += nz;
+
+        // Set normal indices (same as vertex indices)
+        _raw.vnIndices[i]     = idx0;
+        _raw.vnIndices[i + 1] = idx1;
+        _raw.vnIndices[i + 2] = idx2;
+    }
+
+    // Normalize all accumulated normals
+    for (size_t i = 0; i < _raw.normals.size(); i += 3) {
+        GLfloat nx = _raw.normals[i];
+        GLfloat ny = _raw.normals[i + 1];
+        GLfloat nz = _raw.normals[i + 2];
+
+        GLfloat len = sqrt(nx*nx + ny*ny + nz*nz);
+        if (len > 0.0001f) {
+            _raw.normals[i]     /= len;
+            _raw.normals[i + 1] /= len;
+            _raw.normals[i + 2] /= len;
+        }
+	}
+}
+
+void RenderModelLoader::buildMesh() {
+	// DEBUG: Check if we have normals
+    std::cout << "\n=== Mesh Build Debug Info ===\n";
+    std::cout << "Has normals: " << (_raw.hasNormals() ? "YES" : "NO") << "\n";
+    std::cout << "Has texCoords: " << (_raw.hasTexCoords() ? "YES" : "NO") << "\n";
+    std::cout << "Total vertices: " << (_raw.vertices.size() / 4) << "\n";
+    std::cout << "Total normals: " << (_raw.normals.size() / 3) << "\n";
+    std::cout << "Total faces (indices): " << (_raw.vIndices.size() / 3) << "\n\n";
+
+    _mesh.vertices.clear();
+    _mesh.indices.clear();
+
+	calculateBoundingBox();
 
     map<string, GLuint> uniqueVertices;
-    bool hasTextureCoords = !_texture.empty() && !_vtIndices.empty();
-    bool hasNormals = !_normals.empty() && !_vnIndices.empty();
 
-    for (size_t i = 0; i < _vIndices.size(); i++) {
-        GLuint vIdx = _vIndices[i];
-        GLuint vtIdx = (i < _vtIndices.size()) ? _vtIndices[i] : 0;
-        GLuint vnIdx = (i < _vnIndices.size()) ? _vnIndices[i] : 0;
+    for (size_t i = 0; i < _raw.vIndices.size(); i++) {
+        GLuint vIdx = _raw.vIndices[i];
+        GLuint vtIdx = (i < _raw.vtIndices.size()) ? _raw.vtIndices[i] : 0;
+        GLuint vnIdx = (i < _raw.vnIndices.size()) ? _raw.vnIndices[i] : 0;
 
         string key = to_string(vIdx) + "/" + to_string(vtIdx) + "/" + to_string(vnIdx);
 
         if (uniqueVertices.find(key) == uniqueVertices.end()) {
-            GLuint newIndex = static_cast<GLuint>(_finalVertices.size() / 8);  // Now 8 floats per vertex!
+            GLuint newIndex = static_cast<GLuint>(_mesh.vertices.size() / 8);
             uniqueVertices[key] = newIndex;
 
             // Position (x, y, z)
-            GLfloat posX = _vertices[vIdx * 4];
-            GLfloat posY = _vertices[vIdx * 4 + 1];
-            GLfloat posZ = _vertices[vIdx * 4 + 2];
+            _posX = _raw.vertices[vIdx * 4];
+            _posY = _raw.vertices[vIdx * 4 + 1];
+            _posZ = _raw.vertices[vIdx * 4 + 2];
 
-            _finalVertices.push_back(posX);
-            _finalVertices.push_back(posY);
-            _finalVertices.push_back(posZ);
+            _mesh.vertices.push_back(_posX);
+            _mesh.vertices.push_back(_posY);
+            _mesh.vertices.push_back(_posZ);
 
-            // Texture coordinates (u, v)
-            if (hasTextureCoords && vtIdx * 2 + 1 < _texture.size()) {
-                _finalVertices.push_back(_texture[vtIdx * 2]);
-                _finalVertices.push_back(_texture[vtIdx * 2 + 1]);
-            } else {
-                GLfloat u = (posX - minX) / rangeX;
-                GLfloat v = (posY - minY) / rangeY;
-                _finalVertices.push_back(u);
-                _finalVertices.push_back(v);
-            }
-
-            // Color based on normal direction (to distinguish sides)
-            GLfloat r, g, b;
-            if (hasNormals && vnIdx * 3 + 2 < _normals.size()) {
-                // Use normal direction to determine color
-                GLfloat nx = _normals[vnIdx * 3];
-                GLfloat ny = _normals[vnIdx * 3 + 1];
-                GLfloat nz = _normals[vnIdx * 3 + 2];
-
-                // Map normal direction to color
-                // Faces pointing in different directions get different colors
-                r = (nx + 1.0f) * 0.5f;  // Map -1..1 to 0..1
-                g = (ny + 1.0f) * 0.5f;
-                b = (nz + 1.0f) * 0.5f;
-            } else {
-                // Fallback: use position-based coloring
-                r = (posX - minX) / rangeX;
-                g = (posY - minY) / rangeY;
-                b = (posZ - minZ) / rangeZ;
-            }
-
-            _finalVertices.push_back(r);
-            _finalVertices.push_back(g);
-            _finalVertices.push_back(b);
+			calculateUVCoordinates(vtIdx, vnIdx);
+			calculateVertexColor(vnIdx);
         }
 
-        _finalIndices.push_back(uniqueVertices[key]);
+        _mesh.indices.push_back(uniqueVertices[key]);
     }
 
-    if (!hasTextureCoords) {
-        cout << "Note: Model has no UV coordinates, using auto-generated planar mapping" << endl;
-    }
+    std::cout << "\nFinal mesh vertices: " << (_mesh.vertices.size() / 8) << "\n";
+    std::cout << "Final mesh indices: " << _mesh.indices.size() << "\n";
+    std::cout << "===========================\n\n";
 }
 
 // getters
 
 const vector<GLfloat> &RenderModelLoader::getFinalVertices() const {
-	return _finalVertices;
+	return _mesh.vertices;
 }
 
 const vector<GLuint> &RenderModelLoader::getFinalIndices() const {
-	return _finalIndices;
-}
-
-const vector<GLfloat> &RenderModelLoader::getVertices() const {
-	return _vertices;
-}
-
-const vector<GLfloat> &RenderModelLoader::getTextures() const {
-	return _texture;
-}
-
-const vector<GLuint> &RenderModelLoader::getNormals() const {
-	return _normals;
-}
-
-const vector<GLuint> &RenderModelLoader::getVIndices() const {
-	return _vIndices;
-}
-
-const vector<GLuint> &RenderModelLoader::getVtIndices() const {
-	return _vtIndices;
-}
-
-const vector<GLuint> &RenderModelLoader::getVnIndices() const {
-	return _vnIndices;
+	return _mesh.indices;
 }
 
 // private //
@@ -264,9 +371,9 @@ void RenderModelLoader::parseFaces(istringstream &line) {
 		throw RenderModelLoaderException(RenderModelLoaderException::INVALID_FACE_FORMAT);
 	}
 
-	size_t maxVertexIndex = (_vertices.size() / 4);
-	size_t maxTextureIndex = (_texture.size() / 2);
-	size_t maxNormalIndex = (_normals.size() / 3);
+	size_t maxVertexIndex = (_raw.vertices.size() / 4);
+	size_t maxTextureIndex = (_raw.texCoords.size() / 2);
+	size_t maxNormalIndex = (_raw.normals.size() / 3);
 
 	// how many triangles: tokensSize - 2
 	for (int i = 1; i + 1 != tokensSize; i++) {
@@ -282,9 +389,9 @@ void RenderModelLoader::parseFaces(istringstream &line) {
 					throw RenderModelLoaderException(RenderModelLoaderException::INDEX_OUT_OF_RANGE);
 				}
 
-				_vIndices.push_back(idx0);
-				_vIndices.push_back(idx1);
-				_vIndices.push_back(idx2);
+				_raw.vIndices.push_back(idx0);
+				_raw.vIndices.push_back(idx1);
+				_raw.vIndices.push_back(idx2);
 			}
 
 			// Texture coordinate indices
@@ -298,9 +405,9 @@ void RenderModelLoader::parseFaces(istringstream &line) {
 					throw RenderModelLoaderException(RenderModelLoaderException::INDEX_OUT_OF_RANGE);
 				}
 
-				_vtIndices.push_back(idx0);
-				_vtIndices.push_back(idx1);
-				_vtIndices.push_back(idx2);
+				_raw.vtIndices.push_back(idx0);
+				_raw.vtIndices.push_back(idx1);
+				_raw.vtIndices.push_back(idx2);
 			}
 
 			// Normal indices
@@ -314,9 +421,9 @@ void RenderModelLoader::parseFaces(istringstream &line) {
 					throw RenderModelLoaderException(RenderModelLoaderException::INDEX_OUT_OF_RANGE);
 				}
 
-				_vnIndices.push_back(idx0);
-				_vnIndices.push_back(idx1);
-				_vnIndices.push_back(idx2);
+				_raw.vnIndices.push_back(idx0);
+				_raw.vnIndices.push_back(idx1);
+				_raw.vnIndices.push_back(idx2);
 			}
     	} catch (const invalid_argument&) {
     	    throw RenderModelLoaderException(RenderModelLoaderException::INVALID_FACE_FORMAT);

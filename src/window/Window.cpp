@@ -49,8 +49,8 @@ Window::Window(const int width, const int height, const char *name)
 
 	getResolution();
 
-	_width = (width <= 0) ? (_maxWidth / 2) : width;
-	_height = (height <= 0) ? (_maxHeight / 2) : height;
+	_width = (width <= 0) ? (_maxWidth) : width;
+	_height = (height <= 0) ? (_maxHeight) : height;
 
 	if (_width <= 0 || _height <= 0) {
 		throw WindowException(WindowException::INVALID_RESOLUTION);

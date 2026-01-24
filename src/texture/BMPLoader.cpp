@@ -43,6 +43,7 @@ BMPLoader::BMPLoader(const string &path)
 		throw BMPLoaderException(BMPLoaderException::FILE_NOT_FOUND, _path);
 	}
 
+	_path = "../" + path;
 	FILE* file = fopen(_path.c_str(), "rb");
 	if (!file) {
 		throw BMPLoaderException(BMPLoaderException::CANNOT_OPEN, _path);

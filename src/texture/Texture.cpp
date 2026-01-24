@@ -22,7 +22,7 @@ const char *TextureException::what() const noexcept {
 }
 
 Texture::Texture(const string &path) :
-	_bmpImage(path.c_str())
+	_bmpImage(path)
 {
 	glGenTextures(1, &_textureID);
 	glBindTexture(GL_TEXTURE_2D, _textureID);

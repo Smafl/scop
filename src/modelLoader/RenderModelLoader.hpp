@@ -51,6 +51,44 @@ private:
 };
 
 
+struct BoundingBox {
+	GLfloat minX = 1e10f, maxX = -1e10f;
+	GLfloat minY = 1e10f, maxY = -1e10f;
+	GLfloat minZ = 1e10f, maxZ = -1e10f;
+
+	GLfloat getRangeX() const {
+		GLfloat r = maxX - minX;
+		return (r < 0.0001f) ? 1.0f : r;
+	}
+
+	GLfloat getRangeY() const {
+		GLfloat r = maxY - minY;
+		return (r < 0.0001f) ? 1.0f : r;
+	}
+
+	GLfloat getRangeZ() const {
+		GLfloat r = maxZ - minZ;
+		return (r < 0.0001f) ? 1.0f : r;
+	}
+};
+
+struct RawOBJData {
+    std::vector<GLfloat> vertices;   // x,y,z,w per vertex
+    std::vector<GLfloat> texCoords;  // u,v per texcoord
+    std::vector<GLfloat> normals;    // x,y,z per normal
+    std::vector<GLuint> vIndices;    // vertex indices from faces
+    std::vector<GLuint> vtIndices;   // texcoord indices from faces
+    std::vector<GLuint> vnIndices;   // normal indices from faces
+
+    bool hasTexCoords() const { return !texCoords.empty() && !vtIndices.empty(); }
+    bool hasNormals() const { return !normals.empty() && !vnIndices.empty(); }
+};
+
+struct Mesh {
+    std::vector<GLfloat> vertices;   // interleaved [x,y,z,u,v,r,g,b]
+    std::vector<GLuint> indices;     // deduplicated indices
+};
+
 /**
 * @class RenderModelLoader
 * @brief Represents a renderable 3D model loaded from an OBJ file.
@@ -71,29 +109,27 @@ public:
     const std::vector<GLfloat> &getFinalVertices() const;
     const std::vector<GLuint> &getFinalIndices() const;
 
-    const std::vector<GLfloat> &getVertices() const;
-    const std::vector<GLfloat> &getTextures() const;
-    const std::vector<GLuint> &getNormals() const;
-
-    const std::vector<GLuint> &getVIndices() const;
-    const std::vector<GLuint> &getVtIndices() const;
-    const std::vector<GLuint> &getVnIndices() const;
-
 private:
-    std::vector<GLfloat> _finalVertices;
-    std::vector<GLuint>  _finalIndices; // not implemented
-
-    std::vector<GLfloat> _vertices;
-    std::vector<GLfloat> _texture;
-    std::vector<GLuint> _normals;
-
-    std::vector<GLuint> _vIndices;
-    std::vector<GLuint> _vtIndices;
-    std::vector<GLuint> _vnIndices;
-
+    Mesh _mesh;
+    RawOBJData _raw;
+    BoundingBox _bbox;
     std::string _path;
 
-    void generateFinalVertices();
+    GLfloat _posX;
+    GLfloat _posY;
+    GLfloat _posZ;
+    GLfloat _nx;
+    GLfloat _ny;
+    GLfloat _nz;
+
+    void parseOBJFile();
     void parseFaces(std::istringstream &line);
+    void buildMesh();
+    void calculateNormals();
+    void calculateBoundingBox();
+    void calculateUVCoordinates(GLuint vtIdx, GLuint vnIdx);
+    void calculateVertexColor(GLuint vnIdx);
+    void calculateCubicUV();
+
     RenderModelLoader();
 };

@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 #include "modelLoader/RenderModelLoader.hpp"
 #include "window/Window.hpp"
+#include "camera/Camera.hpp"
 #include "shaders/Shader.hpp"
 #include "shaders/ShaderProgram.hpp"
 #include "render/Render.hpp"
@@ -54,7 +55,7 @@ int main(int args, char* argv[]) {
 
         Render render(vertices, indices, shaderProgram);
 
-        Texture texture("../textureSources/sky.bmp");
+        Texture texture(argv[2]);
 
         glUniform1i(glGetUniformLocation(shaderProgram.getShaderProgram(), "tex"), 0);
 
