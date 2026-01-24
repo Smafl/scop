@@ -44,7 +44,7 @@ public:
 	void cleanUp();
 
 private:
-	GLuint _VAO, _VBO_pos, _VBO_tex, _VBO_norm, _EBO;
+	GLuint _VAO, _VBO_pos, _VBO_tex, _VBO_norm, _VBO_col, _EBO;
 	ShaderProgram _shaderProgram;
 	Mesh _mesh;
 

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <random>
 #include <initializer_list>
 #include <glad/gl.h>
 
@@ -72,19 +73,46 @@ RenderModelLoader::RenderModelLoader(const string &path) :
 
 	buildMesh();
 
-	// std::cout << "Mesh stats:\n";
-	// std::cout << "Vertices: " << _mesh.vertices.size() / 3 << "\n";
-	// std::cout << "TexCoords: " << _mesh.texCoords.size() / 2 << "\n";
-	// std::cout << "First few UV coords:\n";
-	// for (size_t i = 0; i < std::min(_mesh.texCoords.size(), size_t(10)); i += 2) {
-	//     std::cout << "  UV: " << _mesh.texCoords[i] << ", " << _mesh.texCoords[i+1] << "\n";
-	// }
+	std::cout << "Mesh stats" << endl;
+	std::cout << "Vertices: " << _mesh.vertices.size() / 3 << endl;
+	std::cout << "TexCoords: " << _mesh.texCoords.size() / 2 << endl << endl;
+
+	std::cout << "Vertices coords" << endl;
+	for (size_t i = 0; i < _mesh.vertices.size(); i += 3) {
+	    std::cout << "  Vertices: " << _mesh.vertices[i] << ", " << _mesh.vertices[i+1] << ", " << _mesh.vertices[i+2] << endl;
+	}
+
+	std::cout << "UV coords" << endl;
+	for (size_t i = 0; i < _mesh.texCoords.size(); i += 2) {
+	    std::cout << "  UV: " << _mesh.texCoords[i] << ", " << _mesh.texCoords[i+1] << endl;
+	}
+
+	std::cout << "Normals coords" << endl;
+	for (size_t i = 0; i < _mesh.normals.size(); i += 3) {
+	    std::cout << "  Normals: " << _mesh.normals[i] << ", " << _mesh.normals[i+1] << ", " << _mesh.normals[i+2] << endl;
+	}
+
+	std::cout << "Indices coords" << endl;
+	for (auto i : _mesh.indices) {
+		cout << i << " ";
+	}
+	cout << endl;
 }
 
 void RenderModelLoader::buildMesh() {
 	GLuint currentIndex = 0;
 
+	// Random number generator for colors
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dis(0.3f, 1.0f);
+
 	for (const auto &face : _faces) {
+
+		float r = dis(gen);
+        float g = dis(gen);
+        float b = dis(gen);
+
 		for (size_t i = 1; i < face.size() -1; i++) {
 			for (size_t j : initializer_list<size_t>{0, i, i + 1}) {
 				const FaceVertex &fv = face[j]
@@ -115,6 +143,11 @@ void RenderModelLoader::buildMesh() {
                     _mesh.normals.push_back(0.0f);
                     _mesh.normals.push_back(1.0f);
                 }
+
+                _mesh.colors.push_back(r);
+                _mesh.colors.push_back(g);
+                _mesh.colors.push_back(b);
+
 				_mesh.indices.push_back(currentIndex++);
 			}
 		}

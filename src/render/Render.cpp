@@ -34,28 +34,36 @@ Render::Render(Mesh &mesh, ShaderProgram &shaderProgram)
 
 	// Position buffer (location 0)
 	glBindBuffer(GL_ARRAY_BUFFER, _VBO_pos);
-	glBufferData(GL_ARRAY_BUFFER, _mesh.vertices.size() * sizeof(float),
+	glBufferData(GL_ARRAY_BUFFER, _mesh.vertices.size() * sizeof(GLfloat),
 					_mesh.vertices.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glEnableVertexAttribArray(0);
 
 	// Texture coordinate buffer (location 1)
 	glBindBuffer(GL_ARRAY_BUFFER, _VBO_tex);
-	glBufferData(GL_ARRAY_BUFFER, _mesh.texCoords.size() * sizeof(float),
+	glBufferData(GL_ARRAY_BUFFER, _mesh.texCoords.size() * sizeof(GLfloat),
 					_mesh.texCoords.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glEnableVertexAttribArray(1);
 
 	// Normal buffer (location 2)
 	glBindBuffer(GL_ARRAY_BUFFER, _VBO_norm);
-	glBufferData(GL_ARRAY_BUFFER, _mesh.normals.size() * sizeof(float),
+	glBufferData(GL_ARRAY_BUFFER, _mesh.normals.size() * sizeof(GLfloat),
 					_mesh.normals.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glEnableVertexAttribArray(2);
 
+	// Color buffer (location 3)
+	glGenBuffers(1, &_VBO_col);
+	glBindBuffer(GL_ARRAY_BUFFER, _VBO_col);
+	glBufferData(GL_ARRAY_BUFFER, _mesh.colors.size() * sizeof(GLfloat),
+	            	_mesh.colors.data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glEnableVertexAttribArray(3);
+
 	// Index buffer
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, _mesh.indices.size() * sizeof(unsigned int),
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, _mesh.indices.size() * sizeof(GLuint),
 					_mesh.indices.data(), GL_STATIC_DRAW);
 
 

@@ -53,6 +53,7 @@ struct Mesh {
     std::vector<GLfloat> vertices;
     std::vector<GLfloat> texCoords;
     std::vector<GLfloat> normals;
+    std::vector<GLfloat> colors;
     std::vector<GLuint> indices;
 };
 

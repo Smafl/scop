@@ -1,15 +1,23 @@
-#version 410 core
-
-out vec4 FragColor;
+#version 330 core
 
 in vec2 TexCoord;
-in vec3 Normal;
+in vec3 VertexColor;
+
+out vec4 FragColor;
 
 uniform sampler2D tex;
 uniform float mixValue;
 
-void main() {
-    vec4 colorFromTexture = texture(tex, TexCoord);
-    vec4 flatColor = vec4(0.8, 0.8, 0.8, 1.0);  // Light gray
-    FragColor = mix(flatColor, colorFromTexture, mixValue);
+void main()
+{
+    // Use vertex color instead of position-based color
+    vec3 colorMode = VertexColor;
+
+    // Get texture color
+    vec4 textureColor = texture(tex, TexCoord);
+
+    // Mix between color mode and texture mode
+    vec3 finalColor = mix(colorMode, textureColor.rgb, mixValue);
+
+    FragColor = vec4(finalColor, 1.0);
 }

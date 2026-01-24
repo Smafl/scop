@@ -128,7 +128,7 @@ int main(int args, char* argv[]) {
             glUniformMatrix4fv(projectionMatrixLoc, 1, GL_TRUE, projectionMatrix);
 
             glBindVertexArray(render.getVAO());
-            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh.indices.size()), GL_UNSIGNED_INT, 0);
+            glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
 
             // Swap front and back buffers
             window.swapBuffers();
