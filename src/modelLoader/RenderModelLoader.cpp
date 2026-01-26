@@ -9,6 +9,7 @@
 #include <glad/gl.h>
 #include <map>
 #include <algorithm>  // min/max
+#include <ctime> // time()
 
 using namespace std;
 
@@ -262,31 +263,25 @@ void RenderModelLoader::calculateNormals() {
 }
 
 void RenderModelLoader::buildMesh() {
-	// DEBUG: Check if we have normals
-    std::cout << "\n=== Mesh Build Debug Info ===\n";
-    std::cout << "Has normals: " << (_raw.hasNormals() ? "YES" : "NO") << "\n";
-    std::cout << "Has texCoords: " << (_raw.hasTexCoords() ? "YES" : "NO") << "\n";
-    std::cout << "Total vertices: " << (_raw.vertices.size() / 4) << "\n";
-    std::cout << "Total normals: " << (_raw.normals.size() / 3) << "\n";
-    std::cout << "Total faces (indices): " << (_raw.vIndices.size() / 3) << "\n\n";
-
     _mesh.vertices.clear();
     _mesh.indices.clear();
 
-	calculateBoundingBox();
+    calculateBoundingBox();
 
-    map<string, GLuint> uniqueVertices;
+    // Seed random number generator
+    srand(static_cast<unsigned>(time(nullptr)));
 
-    for (size_t i = 0; i < _raw.vIndices.size(); i++) {
-        GLuint vIdx = _raw.vIndices[i];
-        GLuint vtIdx = (i < _raw.vtIndices.size()) ? _raw.vtIndices[i] : 0;
-        GLuint vnIdx = (i < _raw.vnIndices.size()) ? _raw.vnIndices[i] : 0;
+    for (size_t i = 0; i < _raw.vIndices.size(); i += 3) {
+        // Generate random vibrant color for this face
+        GLfloat faceR = 0.3f + (static_cast<GLfloat>(rand()) / RAND_MAX) * 0.7f;
+        GLfloat faceG = 0.3f + (static_cast<GLfloat>(rand()) / RAND_MAX) * 0.7f;
+        GLfloat faceB = 0.3f + (static_cast<GLfloat>(rand()) / RAND_MAX) * 0.7f;
 
-        string key = to_string(vIdx) + "/" + to_string(vtIdx) + "/" + to_string(vnIdx);
-
-        if (uniqueVertices.find(key) == uniqueVertices.end()) {
-            GLuint newIndex = static_cast<GLuint>(_mesh.vertices.size() / 8);
-            uniqueVertices[key] = newIndex;
+        // Process each vertex of the triangle
+        for (int v = 0; v < 3; v++) {
+            GLuint vIdx = _raw.vIndices[i + v];
+            GLuint vtIdx = (i + v < _raw.vtIndices.size()) ? _raw.vtIndices[i + v] : 0;
+            GLuint vnIdx = (i + v < _raw.vnIndices.size()) ? _raw.vnIndices[i + v] : 0;
 
             // Position (x, y, z)
             _posX = _raw.vertices[vIdx * 4];
@@ -297,26 +292,27 @@ void RenderModelLoader::buildMesh() {
             _mesh.vertices.push_back(_posY);
             _mesh.vertices.push_back(_posZ);
 
-			calculateUVCoordinates(vtIdx, vnIdx);
-			calculateVertexColor(vnIdx);
+            // UV coordinates
+            calculateUVCoordinates(vtIdx, vnIdx);
+
+            // Vertex color (per-vertex gradient based on normals)
+            calculateVertexColor(vnIdx);
+
+            // Face color (random vibrant, same for all 3 vertices)
+            _mesh.vertices.push_back(faceR);
+            _mesh.vertices.push_back(faceG);
+            _mesh.vertices.push_back(faceB);
+
+            _mesh.indices.push_back(static_cast<GLuint>(_mesh.indices.size()));
         }
-
-        _mesh.indices.push_back(uniqueVertices[key]);
     }
-
-    std::cout << "\nFinal mesh vertices: " << (_mesh.vertices.size() / 8) << "\n";
-    std::cout << "Final mesh indices: " << _mesh.indices.size() << "\n";
-    std::cout << "===========================\n\n";
 }
+
 
 // getters
 
-const vector<GLfloat> &RenderModelLoader::getFinalVertices() const {
-	return _mesh.vertices;
-}
-
-const vector<GLuint> &RenderModelLoader::getFinalIndices() const {
-	return _mesh.indices;
+const Mesh &RenderModelLoader::getMesh() const {
+	return _mesh;
 }
 
 // private //

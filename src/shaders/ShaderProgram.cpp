@@ -11,24 +11,23 @@ ShaderProgramException::ShaderProgramException(ErrorCode err)
 
 const char *ShaderProgramException::what() const noexcept {
 	switch (_errorCode) {
-		case SHADERS_NOT_FOUND: return "Shaders not found";
+		// case SHADER_FAILED: return "Shader error";
 		case LINKING_FAILED: return "Linking shader program failed";
 		default: return "An unknown error occured during shader program creating";
 	}
 }
 
-ShaderProgram::ShaderProgram(vector<Shader> &shaders)
+
+ShaderProgram::ShaderProgram()
 {
-	if (shaders.empty()) {
-		throw ShaderProgramException(ShaderProgramException::SHADERS_NOT_FOUND);
-	}
+	Shader vertShader("../src/shaderSources/default.vert", GL_VERTEX_SHADER);
+	Shader fragShader("../src/shaderSources/default.frag", GL_FRAGMENT_SHADER);
 
 	cout << "Creating shader program..." << endl;
 
 	_shaderProgram = glCreateProgram();
-	for (const auto &shader : shaders) {
-		glAttachShader(_shaderProgram, shader.getShader());
-	}
+	glAttachShader(_shaderProgram, vertShader.getShader());
+	glAttachShader(_shaderProgram, fragShader.getShader());
 	glLinkProgram(_shaderProgram);
 
 	GLint isLinked = 0;
@@ -45,6 +44,9 @@ ShaderProgram::ShaderProgram(vector<Shader> &shaders)
 		glDeleteProgram(_shaderProgram);
 		throw ShaderProgramException(ShaderProgramException::LINKING_FAILED);
 	}
+
+	vertShader.deleteShader();
+	fragShader.deleteShader();
 }
 
 GLuint ShaderProgram::getShaderProgram() const {

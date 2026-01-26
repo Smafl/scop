@@ -1,6 +1,8 @@
 #include "Window.hpp"
 #include "../inputHandler/InputListener.hpp"
-#include "../render/Render.hpp"
+#include "../scene/Transformation.hpp"
+#include "../scene/Material.hpp"
+#include "../scene/Camera.hpp"
 #include <string>
 #include <iostream>
 #include <glad/gl.h>
@@ -44,7 +46,7 @@ Window::Window(const int width, const int height, const char *name)
 	}
 
 	if (_windowName == nullptr || _windowName[0] == '\0') {
-		_windowName = "Hello triangle";
+		_windowName = "〔^▴^〕(^.^)〈°⥿°〉";
 	}
 
 	getResolution();
@@ -87,9 +89,9 @@ int Window::getScreenHeight() const {
 
 // other //
 
-void Window::setUpUserInput(Render &render) {
+void Window::setUpUserInput(InputData &inputData) {
 	// Set user pointer for callback access
-	glfwSetWindowUserPointer(_window, &render);
+	glfwSetWindowUserPointer(_window, &inputData);
 
 	// Set input callback
 	glfwSetKeyCallback(_window, InputListener::key_callback);

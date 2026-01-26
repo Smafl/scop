@@ -15,12 +15,16 @@ const char *MatrixTransformException::what() const noexcept {
 	}
 }
 
+
+// scale
 void MatrixTransform::scale(GLfloat *matrix, GLfloat scaleFactor) {
     matrix[0] = matrix[0] * scaleFactor;
     matrix[5] = matrix[5] * scaleFactor;
     matrix[10] = matrix[10] * scaleFactor;
 }
 
+
+// rotate
 void MatrixTransform::rotateX(GLfloat *matrix, GLfloat angleDegree) {
     GLfloat c = cosf(degreesToRadians(angleDegree));
     GLfloat s = sinf(degreesToRadians(angleDegree));
@@ -51,22 +55,16 @@ void MatrixTransform::rotateZ(GLfloat *matrix, GLfloat angleDegree) {
     matrix[5] = c;
 }
 
+
+// translate
 void MatrixTransform::translate(GLfloat *matrix, GLfloat x, GLfloat y, GLfloat z) {
 	matrix[3] = matrix[3] + x;
     matrix[7] = matrix[7] + y;
     matrix[11] = matrix[11] + z;
 }
 
-void MatrixTransform::perspective(GLfloat *matrix, GLfloat fov, GLfloat aspect, GLfloat near, GLfloat far) {
-    GLfloat f = 1.0f / tan(degreesToRadians(fov) / 2.0f);
 
-    matrix[0] = f / aspect;
-    matrix[5] = f;
-    matrix[10] = (far+near)/(near-far);
-    matrix[11] = (2*far*near)/(near-far);
-    matrix[14] = -1;
-}
-
+// identity matrix
 void MatrixTransform::loadIdentity(GLfloat *matrix) {
 	for (int i = 0; i < 16; ++i)
         matrix[i] = 0.0f;
@@ -77,6 +75,8 @@ void MatrixTransform::loadIdentity(GLfloat *matrix) {
 	matrix[15] = 1.0f;
 }
 
+
+// matrix multiplication
 void MatrixTransform::multiply(GLfloat *m1, GLfloat *m2, GLfloat *result) {
     GLfloat temp[16];
     for (int row = 0; row < 4; ++row) {
@@ -89,6 +89,18 @@ void MatrixTransform::multiply(GLfloat *m1, GLfloat *m2, GLfloat *result) {
         }
     }
     memcpy(result, temp, sizeof(GLfloat) * 16);
+}
+
+
+// other
+void MatrixTransform::perspective(GLfloat *matrix, GLfloat fov, GLfloat aspect, GLfloat near, GLfloat far) {
+    GLfloat f = 1.0f / tan(degreesToRadians(fov) / 2.0f);
+
+    matrix[0] = f / aspect;
+    matrix[5] = f;
+    matrix[10] = (far+near)/(near-far);
+    matrix[11] = (2*far*near)/(near-far);
+    matrix[14] = -1;
 }
 
 GLfloat MatrixTransform::degreesToRadians(GLfloat degrees) {

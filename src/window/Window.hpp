@@ -13,10 +13,13 @@
 
 #pragma once
 
-#include "../render/Render.hpp"
-#include <exception>
+#include "../inputHandler/InputListener.hpp"
+#include "../scene/Transformation.hpp"
+#include "../scene/Material.hpp"
+#include "../scene/Camera.hpp"
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
+#include <exception>
 
 /**
 * @class WindowException
@@ -41,6 +44,12 @@ private:
 };
 
 
+struct InputData {
+    Transformation* transformation;
+    Material* material;
+    Camera* camera;
+};
+
 /**
 * @class Window
 * @brief Wraps a GLFW window and provides utility functions.
@@ -62,13 +71,15 @@ private:
 * be created, or the screen resolution is invalid.
 */
 class Window {
-public:
+	public:
+	InputData inputData;
+
 	Window(const int width, const int height, const char *name);
 
 	int getScreenWidth() const;
 	int getScreenHeight() const;
 
-	void setUpUserInput(Render &render);
+	void setUpUserInput(InputData &inputData);
 	bool windowShouldClose() const;
 	void swapBuffers() const;
 

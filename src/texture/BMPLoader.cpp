@@ -37,8 +37,6 @@ const char *BMPLoaderException::what() const noexcept {
 BMPLoader::BMPLoader(const string &path)
 	: _path(path)
 {
-	cout << "BMP is starting loading from " << _path << endl;
-
 	if (_path.empty()) {
 		throw BMPLoaderException(BMPLoaderException::FILE_NOT_FOUND, _path);
 	}
@@ -66,34 +64,6 @@ BMPLoader::BMPLoader(const string &path)
 	fclose(file);
 
 	channels = _bmpHeader.bitsPerPixel / 8;
-
-	// channels = _bmpHeader.bitsPerPixel / 8;
-    // if (channels != 3 && channels != 4) {
-    //     fclose(file);
-    //     throw BMPLoaderException(BMPLoaderException::INVALID_FORMAT, _path);
-    // }
-
-    // // Calculate padded row size in file
-    // int rowSize = ((_bmpHeader.bitsPerPixel * _bmpHeader.width + 31) / 32) * 4;
-
-    // // Allocate temporary buffer for file data
-    // std::vector<unsigned char> fileData(rowSize * _bmpHeader.height);
-
-    // fseek(file, _bmpHeader.dataOffset, SEEK_SET);
-    // fread(fileData.data(), 1, fileData.size(), file);
-    // fclose(file);
-
-    // // Allocate final pixel buffer (without padding)
-    // _pixelData.resize(_bmpHeader.width * _bmpHeader.height * channels);
-
-    // // Copy row by row, flipping vertically
-    // for (uint32_t y = 0; y < _bmpHeader.height; ++y) {
-    //     unsigned char* dstRow = &_pixelData[y * _bmpHeader.width * channels];
-    //     unsigned char* srcRow = &fileData[(_bmpHeader.height - 1 - y) * rowSize];
-    //     memcpy(dstRow, srcRow, _bmpHeader.width * channels);
-    // }
-
-	cout << "BMP was loaded from " << _path << endl;
 }
 
 const Header *BMPLoader::getBMPHeader() const {

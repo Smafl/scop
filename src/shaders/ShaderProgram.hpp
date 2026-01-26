@@ -8,7 +8,7 @@
 class ShaderProgramException : public std::exception {
 public:
 	enum ErrorCode {
-		SHADERS_NOT_FOUND,
+		// SHADER_FAILED,
 		LINKING_FAILED,
 	};
 
@@ -21,12 +21,10 @@ private:
 
 class ShaderProgram {
 public:
-	explicit ShaderProgram(std::vector<Shader> &shaders);
+	ShaderProgram();
 	GLuint getShaderProgram() const;
 	void deleteShaderProgram();
 
 private:
 	GLuint _shaderProgram;
-
-	ShaderProgram();
 };

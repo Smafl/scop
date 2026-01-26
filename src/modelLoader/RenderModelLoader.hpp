@@ -106,8 +106,7 @@ class RenderModelLoader {
 public:
     explicit RenderModelLoader(const std::string &path);
 
-    const std::vector<GLfloat> &getFinalVertices() const;
-    const std::vector<GLuint> &getFinalIndices() const;
+    const Mesh &getMesh() const;
 
 private:
     Mesh _mesh;

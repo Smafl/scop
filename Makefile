@@ -27,14 +27,17 @@ SRC =	src/main.cpp\
 		glad.cpp\
 		src/modelLoader/RenderModelLoader.cpp\
 		src/window/Window.cpp\
-		src/window/Camera.cpp\
 		src/inputHandler/InputListener.cpp\
 		src/shaders/Shader.cpp\
 		src/shaders/ShaderProgram.cpp\
 		src/render/Render.cpp\
+		src/render/RenderDraw.cpp\
 		src/texture/Texture.cpp\
 		src/texture/BMPLoader.cpp\
 		src/matrixMath/MatrixTransform.cpp\
+		src/scene/Transformation.cpp\
+		src/scene/Material.cpp\
+		src/scene/Camera.cpp\
 
 OBJ_DIR = obj
 

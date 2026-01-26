@@ -3,10 +3,8 @@
 #include <vector>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
-#include "../openglBuffers/VAO.hpp"
-#include "../openglBuffers/VBO.hpp"
-#include "../openglBuffers/EBO.hpp"
 #include "../shaders/ShaderProgram.hpp"
+#include "../modelLoader/RenderModelLoader.hpp"
 
 using namespace std;
 
@@ -20,41 +18,87 @@ const char *RenderException::what() const noexcept {
 	}
 }
 
-Render::Render(vector<GLfloat> &vertices, vector<GLuint> &indices, ShaderProgram &shaderProgram)
-	: _ebo(EBO(indices)), _vbo(VBO(vertices)), _shaderProgram(shaderProgram)
+Render::Render(const Mesh &mesh, ShaderProgram &shaderProgram)
+	:  _mesh(mesh), _shaderProgram(shaderProgram)
 {
-	_vao.linkAttrib();
-	_vao.unbind();
+
+	glGenVertexArrays(1, &_VAO);
+	glBindVertexArray(_VAO);
+
+	glGenBuffers(1, &_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, _VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * _mesh.vertices.size(), _mesh.vertices.data(), GL_STATIC_DRAW);
+
+	int stride = 11 * sizeof(GLfloat);
+
+	// Position attribute (location = 0)
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+	glEnableVertexAttribArray(0);
+
+	// Texture coord attribute (location = 1)
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	// Vertex color attribute (location = 2)
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (void*)(5 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	// Face color attribute (location = 3)
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, stride, (void*)(8 * sizeof(float)));
+	glEnableVertexAttribArray(3);
+
+	glGenBuffers(1, &_EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * _mesh.indices.size(), _mesh.indices.data(), GL_STATIC_DRAW);
 
 	// Sets the color that will be used when clearing the screen
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 	glSettings();
+
+	// Unbind
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	uploadUniforms();
 }
 
 // getters //
 
-VAO Render::getVAO() const {
-	return _vao;
+const ShaderUniforms &Render::getUniformLocation() const {
+	return _uniformLocations;
+}
+
+GLuint Render::getVAO() const {
+	return _VAO;
 }
 
 // other //
+
+void Render::uploadUniforms() {
+	// check for -1
+	_uniformLocations.texture = glGetUniformLocation(_shaderProgram.getShaderProgram(), "tex");
+	_uniformLocations.mixValue = glGetUniformLocation(_shaderProgram.getShaderProgram(), "mixValue");
+	_uniformLocations.useFaceColors = glGetUniformLocation(_shaderProgram.getShaderProgram(), "useFaceColors");
+	_uniformLocations.modelMatrix = glGetUniformLocation(_shaderProgram.getShaderProgram(), "modelMatrix");
+	_uniformLocations.viewMatrix = glGetUniformLocation(_shaderProgram.getShaderProgram(), "viewMatrix");
+	_uniformLocations.projectionMatrix = glGetUniformLocation(_shaderProgram.getShaderProgram(), "projectionMatrix");
+}
 
 void Render::glSettings() {
 	// the depth value for every pixel
 	// when enabled: performing the depth test
 	glEnable(GL_DEPTH_TEST);
-	// glDisable(GL_CULL_FACE);
 
-	glEnable(GL_CULL_FACE);
+	glDisable(GL_CULL_FACE);
+	// glEnable(GL_CULL_FACE);
 	// glFrontFace(GL_CW);
 	// glCullFace(GL_BACK);
 }
 
 void Render::cleanUp() {
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	_vao.deleteVAO();
-	_ebo.deleteEBO();
-	_vbo.deleteVBO();
+	glDeleteVertexArrays(1, &_VAO);
+	glDeleteBuffers(1, &_EBO);
+	glDeleteBuffers(1, &_VBO);
 	_shaderProgram.deleteShaderProgram();
 }
