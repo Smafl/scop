@@ -10,6 +10,7 @@ public:
 		TYPE_NOT_FOUND,
 		SOURCE_NOT_FOUND,
 		COMPILATION_FAILED,
+		UNKNOWN_ERROR,
 	};
 
 	explicit ShaderException(ErrorCode err);

@@ -1,18 +1,30 @@
 
 NAME = scop
 CXX = g++
-CXXFLAGS = -Wall -Werror -Wextra -DGL_SILENCE_DEPRECATION -MMD -MP
+CXXFLAGS = -Wall -Werror -Wextra -MMD -MP
 
-ifeq ($(USER), elenakulichkova)
-	CXXFLAGS += -std=c++20
-else
-	CXXFLAGS += -std=c++2a
-endif
+UNAME_S := $(shell uname -s)
 
 GLAD_INCLUDE = -Iinclude
-GLFW_INCLUDE = -I/opt/homebrew/opt/glfw/include
-GLM_INCLUDE = -I/opt/homebrew/include/glm
-GLFW_LIB = -L/opt/homebrew/opt/glfw/lib -lglfw -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
+
+PKG_CONFIG      := pkg-config
+PKG_CONFIG_PATH := $(HOME)/.local/lib/pkgconfig
+export PKG_CONFIG_PATH
+
+ifeq ($(UNAME_S),Darwin)
+	CXXFLAGS += -std=c++20
+	CXXFLAGS += -DGL_SILENCE_DEPRECATION
+
+	GLFW_INCLUDE = -I/opt/homebrew/opt/glfw/include
+	GLM_INCLUDE = -I/opt/homebrew/include/glm
+	GLFW_LIB = -L/opt/homebrew/opt/glfw/lib -lglfw -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
+else
+	CXXFLAGS += -std=c++2a
+
+	GLFW_INCLUDE = $(shell $(PKG_CONFIG) --cflags glfw3)
+	GLM_INCLUDE = -I$(HOME)/.local/include
+	GLFW_LIB = $(shell $(PKG_CONFIG) --libs glfw3) -lGL -lX11 -lXi -lXrandr -lXinerama -lXcursor -ldl
+endif
 
 LEEAKSAN_LDFLAG = -L../LeakSanitizer -llsan -lc++ -Wno-gnu-include-next -I ../LeakSanitize
 

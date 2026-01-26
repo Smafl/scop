@@ -10,6 +10,8 @@
 #include <map>
 #include <algorithm>  // min/max
 #include <ctime> // time()
+#include <math.h> // fabs()
+#include <cmath> // sqrt()
 
 using namespace std;
 

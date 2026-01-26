@@ -20,8 +20,8 @@ const char *ShaderProgramException::what() const noexcept {
 
 ShaderProgram::ShaderProgram()
 {
-	Shader vertShader("../src/shaderSources/default.vert", GL_VERTEX_SHADER);
-	Shader fragShader("../src/shaderSources/default.frag", GL_FRAGMENT_SHADER);
+	Shader vertShader("src/shaderSources/default.vert", GL_VERTEX_SHADER);
+	Shader fragShader("src/shaderSources/default.frag", GL_FRAGMENT_SHADER);
 
 	cout << "Creating shader program..." << endl;
 
@@ -37,8 +37,9 @@ ShaderProgram::ShaderProgram()
 		glGetProgramiv(_shaderProgram, GL_INFO_LOG_LENGTH, &maxLength);
 
 		// the maxLength includes the NULL character
-		std::vector<GLchar> infoLog(maxLength);
-		glGetProgramInfoLog(_shaderProgram, maxLength, &maxLength, &infoLog[0]);
+		std::vector<GLchar> errorLog(maxLength);
+		glGetProgramInfoLog(_shaderProgram, maxLength, &maxLength, &errorLog[0]);
+		cerr << "Shader compilation failed: " << errorLog.data();
 
 		// delete the shader program if linking failed
 		glDeleteProgram(_shaderProgram);

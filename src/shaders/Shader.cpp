@@ -18,6 +18,7 @@ const char *ShaderException::what() const noexcept {
 		case TYPE_NOT_FOUND: return "Not existing shader type";
 		case SOURCE_NOT_FOUND: return "Source for shader not found";
 		case COMPILATION_FAILED: return "Shader compilation failed";
+		case UNKNOWN_ERROR: return "Failed to get shader source";
 		default: return "An unknown error occured during shader creating";
 	}
 }
@@ -89,9 +90,7 @@ bool Shader::isValidShaderType(GLenum type) const {
 string Shader::getFileContent(const char *fileName) {
 	ifstream inputFile(fileName, ios::in);
 	if (!inputFile) {
-		cerr << "No inputFile: " << fileName << endl;
-		cerr << "Error code: " << strerror(errno) << endl;
-		return "";
+		throw ShaderException(ShaderException::UNKNOWN_ERROR);
 	}
 
 	ostringstream content;
