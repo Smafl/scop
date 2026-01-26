@@ -14,69 +14,76 @@ InputHandler &InputHandler::getInstance() {
 
 void InputHandler::handleKeyInput(InputData* inputData, int key, int scancode, int action, int mods) {
 	(void)scancode;
-	// // Close by ESC
-	// if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-	// 	glfwSetWindowShouldClose(window, GL_TRUE);
-	// }
+
+	if (action != GLFW_PRESS) return;
+
+	bool hasCtrlOrCmd = (mods & GLFW_MOD_CONTROL) || (mods & GLFW_MOD_SUPER);
+	bool hasShift = (mods & GLFW_MOD_SHIFT);
+
+	GLfloat delta = inputData->transformation->animationState.delta;
+	// Calculate movement multiplier based on modifiers
+	if (hasShift) {
+		delta *= 5.0f;
+	}
+
+	if (hasCtrlOrCmd) {
+		switch (key) {
+			case GLFW_KEY_R:
+				// Rotation
+				inputData->transformation->animationState.isRotate = !(inputData->transformation->animationState.isRotate == true);
+				return;
+			case GLFW_KEY_T:
+				// Toggle texture/color
+				inputData->material->materialBlend.textureMode = !inputData->material->materialBlend.textureMode;
+				inputData->material->materialBlend.targetMixValue = inputData->material->materialBlend.textureMode ? 1.0f : 0.0f;
+				return;
+			case GLFW_KEY_F:
+				// Toggle color mods
+				inputData->material->materialBlend.faceColorMode = !inputData->material->materialBlend.faceColorMode;
+				inputData->material->materialBlend.textureMode = false;
+				inputData->material->materialBlend.targetMixValue = 0.0f;
+				return;
+		}
+	}
 
 	// Translation
-	if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) {
-		inputData->transformation->transform.translationX -= inputData->transformation->animationState.delta;
+	switch (key) {
+		case GLFW_KEY_LEFT:
+			inputData->transformation->transform.translationX -= delta;
+			return;
+		case GLFW_KEY_RIGHT:
+			inputData->transformation->transform.translationX += delta;
+			return;
+		case GLFW_KEY_DOWN:
+			inputData->transformation->transform.translationY -= delta;
+			return;
+		case GLFW_KEY_UP:
+			inputData->transformation->transform.translationY += delta;
+			return;
+		case GLFW_KEY_S:
+			// Move backward
+			inputData->transformation->transform.translationZ -= delta;
+			return;
+		case GLFW_KEY_W:
+			// Move forward
+			inputData->transformation->transform.translationZ += delta;
+			return;
 	}
-
-	if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
-		inputData->transformation->transform.translationX += inputData->transformation->animationState.delta;
-	}
-
-	if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
-		inputData->transformation->transform.translationY -= inputData->transformation->animationState.delta;
-	}
-
-	if (key == GLFW_KEY_UP && action == GLFW_PRESS) {
-		inputData->transformation->transform.translationY += inputData->transformation->animationState.delta;
-	}
-
-	// Move backward
-	if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-		inputData->transformation->transform.translationZ -= inputData->transformation->animationState.delta;
-	}
-
-	// Move forward
-	if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-		inputData->transformation->transform.translationZ += inputData->transformation->animationState.delta;
-	}
-
-	// Rotation
-	if (key == GLFW_KEY_R && action == GLFW_PRESS && ((mods & GLFW_MOD_CONTROL) || (mods & GLFW_MOD_SUPER))) {
-		inputData->transformation->animationState.isRotate = (inputData->transformation->animationState.isRotate == true) ? false : true;
-	}
-
-	// Switch texture/color
-	if (key == GLFW_KEY_T && action == GLFW_PRESS && ((mods & GLFW_MOD_CONTROL) || (mods & GLFW_MOD_SUPER))) {
-		inputData->material->materialBlend.textureMode = !inputData->material->materialBlend.textureMode;
-		inputData->material->materialBlend.targetMixValue = inputData->material->materialBlend.textureMode ? 1.0f : 0.0f;
-	}
-
-	// Show face colors
-	if (key == GLFW_KEY_F && action == GLFW_PRESS && ((mods & GLFW_MOD_CONTROL) || (mods & GLFW_MOD_SUPER))) {
-		inputData->material->materialBlend.faceColorMode = !inputData->material->materialBlend.faceColorMode;
-		inputData->material->materialBlend.textureMode = false;
-		inputData->material->materialBlend.targetMixValue = 0.0f;
-	}
-
 }
 
 void InputHandler::handleMouseButton(InputData* inputData, int button, int action, int mods) {
 	(void)inputData;
 	(void)mods;
 
-	// MacOS trackpad -- one finger click
-	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-		;
-	}
+	if (action != GLFW_PRESS) return;
+
+	// // MacOS trackpad -- one finger click
+	// if (button == GLFW_MOUSE_BUTTON_LEFT) {
+	// 	inputData->transformation->dragState.isDragging = true;
+	// }
 
 	// MacOS trackpad -- two fingers click
-	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+	if (button == GLFW_MOUSE_BUTTON_RIGHT) {
 		;
 	}
 }
@@ -93,10 +100,43 @@ void InputHandler::handleScroll(InputData* inputData, double xoffset, double yof
 	}
 }
 
+void InputHandler::handleMouseMove(InputData* inputData, double xPos, double yPos) {
+	if (!inputData->transformation->dragState.isDragging) return;
+
+    double deltaX = xPos - inputData->transformation->dragState.lastMouseX;
+    double deltaY = yPos - inputData->transformation->dragState.lastMouseY;
+
+	const float sensitivity = 0.5f;
+
+    // Update rotation angles
+    // Horizontal movement rotates around Y axis
+    inputData->transformation->transform.rotationY += deltaX * sensitivity;
+
+    // Vertical movement rotates around X axis
+    inputData->transformation->transform.rotationX += deltaY * sensitivity;
+
+    // // Optional: clamp X rotation to prevent gimbal lock
+  	// const float maxAngle = 89.0f;
+    // if (inputData->transformation->transform.rotationX > maxAngle)
+    //     inputData->transformation->transform.rotationX = maxAngle;
+    // if (inputData->transformation->transform.rotationX < -maxAngle)
+    //     inputData->transformation->transform.rotationX = -maxAngle;
+
+	inputData->transformation->dragState.lastMouseX = xPos;
+	inputData->transformation->dragState.lastMouseY = yPos;
+}
+
+
+// Callback
 
 void InputHandler::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	InputData* inputData = static_cast<InputData*>(glfwGetWindowUserPointer(window));
 	if (!inputData) return;
+
+	// Close by ESC
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+		glfwSetWindowShouldClose(window, GL_TRUE);
+	}
 
 	getInstance().handleKeyInput(inputData, key, scancode, action, mods);
 }
@@ -104,6 +144,18 @@ void InputHandler::key_callback(GLFWwindow* window, int key, int scancode, int a
 void InputHandler::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
 	InputData* inputData= static_cast<InputData*>(glfwGetWindowUserPointer(window));
 	if (!inputData) return;
+
+    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        if (action == GLFW_PRESS) {
+            inputData->transformation->dragState.isDragging = true;
+            // Get current mouse position
+            glfwGetCursorPos(window,
+                           &inputData->transformation->dragState.lastMouseX,
+                           &inputData->transformation->dragState.lastMouseY);
+        } else if (action == GLFW_RELEASE) {
+            inputData->transformation->dragState.isDragging = false;
+        }
+    }
 
 	getInstance().handleMouseButton(inputData, button, action, mods);
 }
@@ -113,4 +165,13 @@ void InputHandler::scroll_callback(GLFWwindow* window, double xoffset, double yo
 	if (!inputData) return;
 
 	getInstance().handleScroll(inputData, xoffset, yoffset);
+}
+
+void InputHandler::cursor_position_callback(GLFWwindow *window, double xPos, double yPos) {
+	(void)window;
+
+	InputData* inputData = static_cast<InputData*>(glfwGetWindowUserPointer(window));
+	if (!inputData) return;
+
+	getInstance().handleMouseMove(inputData, xPos, yPos);
 }

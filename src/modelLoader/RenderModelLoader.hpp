@@ -129,6 +129,7 @@ private:
     void calculateUVCoordinates(GLuint vtIdx, GLuint vnIdx);
     void calculateVertexColor(GLuint vnIdx);
     void calculateCubicUV();
+    void centerVertices();
 
     RenderModelLoader();
 };

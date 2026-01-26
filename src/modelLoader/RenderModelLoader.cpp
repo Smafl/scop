@@ -262,11 +262,37 @@ void RenderModelLoader::calculateNormals() {
 	}
 }
 
+void RenderModelLoader::centerVertices() {
+    // Calculate center of bounding box
+    GLfloat centerX = (_bbox.minX + _bbox.maxX) / 2.0f;
+    GLfloat centerY = (_bbox.minY + _bbox.maxY) / 2.0f;
+    GLfloat centerZ = (_bbox.minZ + _bbox.maxZ) / 2.0f;
+
+    // Shift all vertices to center the model at origin
+    for (size_t i = 0; i < _raw.vertices.size(); i += 4) {
+        _raw.vertices[i]     -= centerX;  // x
+        _raw.vertices[i + 1] -= centerY;  // y
+        _raw.vertices[i + 2] -= centerZ;  // z
+        // _raw.vertices[i + 3] is the w component (1.0), leave it
+    }
+
+    // Update bounding box to reflect new centered coordinates
+    _bbox.minX -= centerX;
+    _bbox.maxX -= centerX;
+    _bbox.minY -= centerY;
+    _bbox.maxY -= centerY;
+    _bbox.minZ -= centerZ;
+    _bbox.maxZ -= centerZ;
+
+    std::cout << "Model centered: offset(" << centerX << ", " << centerY << ", " << centerZ << ")\n";
+}
+
 void RenderModelLoader::buildMesh() {
     _mesh.vertices.clear();
     _mesh.indices.clear();
 
     calculateBoundingBox();
+	centerVertices();
 
     // Seed random number generator
     srand(static_cast<unsigned>(time(nullptr)));

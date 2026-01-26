@@ -67,7 +67,6 @@ int main(int args, char* argv[]) {
             transformation.updateModelMatrix();
 
             glUniformMatrix4fv(render.getUniformLocation().modelMatrix, 1, GL_TRUE, transformation.modelMatrix);
-
             glUniformMatrix4fv(render.getUniformLocation().viewMatrix, 1, GL_TRUE, camera.viewMatrix);
             glUniformMatrix4fv(render.getUniformLocation().projectionMatrix, 1, GL_TRUE, camera.projectionMatrix);
 

@@ -4,11 +4,16 @@
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
+struct DragState {
+    bool isDragging = false;
+    double lastMouseX = 0.0;
+    double lastMouseY = 0.0;
+};
 
 struct AnimationState {
     GLfloat delta = 0.05f;
     GLfloat rotation = 0.0f;
-    bool isRotate = false;
+    bool isRotate = true;
 };
 
 struct Transform {
@@ -27,6 +32,7 @@ class Transformation {
 public:
 	AnimationState animationState;
 	Transform transform;
+	DragState dragState;
 
 	GLfloat modelMatrix[16];
 	GLfloat scale[16], rotateX[16], rotateY[16], rotateZ[16], temp[16];
@@ -34,9 +40,5 @@ public:
 	GLfloat minZ = -5.0f;
     GLfloat maxZ = 0.5f;
 
-	Transformation();
-
 	void updateModelMatrix();
-
-private:
 };

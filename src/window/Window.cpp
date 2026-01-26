@@ -50,8 +50,8 @@ Window::Window(const int width, const int height, const char *name)
 
 	getResolution();
 
-	_width = (width <= 0) ? (_maxWidth) : width;
-	_height = (height <= 0) ? (_maxHeight) : height;
+	_width = (width <= 0) ? _maxWidth : width;
+	_height = (height <= 0) ? _maxHeight : height;
 
 	if (_width <= 0 || _height <= 0) {
 		throw WindowException(WindowException::INVALID_RESOLUTION);
@@ -96,7 +96,8 @@ void Window::setUpUserInput(InputData &inputData) {
 	glfwSetKeyCallback(_window, InputHandler::key_callback);
 	glfwSetMouseButtonCallback(_window, InputHandler::mouse_button_callback);
 	glfwSetScrollCallback(_window, InputHandler::scroll_callback);
-}
+	glfwSetCursorPosCallback(_window, InputHandler::cursor_position_callback);
+;}
 
 /**
 * @brief Check if the window received a close request.
