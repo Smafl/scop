@@ -11,6 +11,7 @@
 #include "scene/Transformation.hpp"
 #include "scene/Material.hpp"
 #include "scene/Camera.hpp"
+#include "inputHandler/InputData.hpp"
 
 using namespace std;
 

@@ -1,11 +1,10 @@
 #include "Window.hpp"
-#include "../inputHandler/InputListener.hpp"
-#include "../scene/Transformation.hpp"
-#include "../scene/Material.hpp"
-#include "../scene/Camera.hpp"
+#include "../inputHandler/InputData.hpp"
+#include "../inputHandler/InputHandler.hpp"
 #include <string>
 #include <iostream>
 #include <glad/gl.h>
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 using namespace std;
@@ -94,9 +93,9 @@ void Window::setUpUserInput(InputData &inputData) {
 	glfwSetWindowUserPointer(_window, &inputData);
 
 	// Set input callback
-	glfwSetKeyCallback(_window, InputListener::key_callback);
-	glfwSetMouseButtonCallback(_window, InputListener::mouse_button_callback);
-	glfwSetScrollCallback(_window, InputListener::scroll_callback);
+	glfwSetKeyCallback(_window, InputHandler::key_callback);
+	glfwSetMouseButtonCallback(_window, InputHandler::mouse_button_callback);
+	glfwSetScrollCallback(_window, InputHandler::scroll_callback);
 }
 
 /**
