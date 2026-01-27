@@ -71,35 +71,6 @@ void InputHandler::handleKeyInput(InputData* inputData, int key, int scancode, i
 	}
 }
 
-void InputHandler::handleMouseButton(InputData* inputData, int button, int action, int mods) {
-	(void)inputData;
-	(void)mods;
-
-	if (action != GLFW_PRESS) return;
-
-	// // MacOS trackpad -- one finger click
-	// if (button == GLFW_MOUSE_BUTTON_LEFT) {
-	// 	inputData->transformation->dragState.isDragging = true;
-	// }
-
-	// MacOS trackpad -- two fingers click
-	if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-		;
-	}
-}
-
-void InputHandler::handleScroll(InputData* inputData, double xoffset, double yoffset) {
-	(void)yoffset;
-
-	// Multiply yoffset by a sensitivity factor to control speed
-	const float scrollSensitivity = 0.1f;
-
-	GLfloat newZ = inputData->transformation->transform.translationZ + xoffset * scrollSensitivity;
-	if (newZ <= inputData->transformation->maxZ && newZ >= inputData->transformation->minZ) {
-		inputData->transformation->transform.translationZ = newZ;
-	}
-}
-
 void InputHandler::handleMouseMove(InputData* inputData, double xPos, double yPos) {
 	if (!inputData->transformation->dragState.isDragging) return;
 
@@ -142,6 +113,8 @@ void InputHandler::key_callback(GLFWwindow* window, int key, int scancode, int a
 }
 
 void InputHandler::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+	(void)mods;
+
 	InputData* inputData= static_cast<InputData*>(glfwGetWindowUserPointer(window));
 	if (!inputData) return;
 
@@ -156,15 +129,21 @@ void InputHandler::mouse_button_callback(GLFWwindow* window, int button, int act
             inputData->transformation->dragState.isDragging = false;
         }
     }
-
-	getInstance().handleMouseButton(inputData, button, action, mods);
 }
 
 void InputHandler::scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+	(void)yoffset;
+
 	InputData* inputData = static_cast<InputData*>(glfwGetWindowUserPointer(window));
 	if (!inputData) return;
 
-	getInstance().handleScroll(inputData, xoffset, yoffset);
+	// Multiply yoffset by a sensitivity factor to control speed
+	const float scrollSensitivity = 0.1f;
+
+	GLfloat newZ = inputData->transformation->transform.translationZ + xoffset * scrollSensitivity;
+	if (newZ <= inputData->transformation->maxZ && newZ >= inputData->transformation->minZ) {
+		inputData->transformation->transform.translationZ = newZ;
+	}
 }
 
 void InputHandler::cursor_position_callback(GLFWwindow *window, double xPos, double yPos) {
@@ -174,4 +153,13 @@ void InputHandler::cursor_position_callback(GLFWwindow *window, double xPos, dou
 	if (!inputData) return;
 
 	getInstance().handleMouseMove(inputData, xPos, yPos);
+}
+
+void InputHandler::framebuffer_size_callback(GLFWwindow *window, int width, int height) {
+	InputData* inputData = static_cast<InputData*>(glfwGetWindowUserPointer(window));
+	if (!inputData) return;
+
+	glViewport(0, 0, width, height);
+
+	inputData->camera->updateAspect(width, height);
 }

@@ -1,4 +1,5 @@
 #include "ShaderProgram.hpp"
+#include "../ResourcePath.hpp"
 #include <exception>
 #include <iostream>
 #include <vector>
@@ -20,8 +21,10 @@ const char *ShaderProgramException::what() const noexcept {
 
 ShaderProgram::ShaderProgram()
 {
-	Shader vertShader("src/shaderSources/default.vert", GL_VERTEX_SHADER);
-	Shader fragShader("src/shaderSources/default.frag", GL_FRAGMENT_SHADER);
+	const string vert = "src/shaderSources/default.vert";
+	const string frag = "src/shaderSources/default.frag";
+	Shader vertShader(ResourcePath::getPath(vert).c_str(), GL_VERTEX_SHADER);
+	Shader fragShader(ResourcePath::getPath(frag).c_str(), GL_FRAGMENT_SHADER);
 
 	cout << "Creating shader program..." << endl;
 

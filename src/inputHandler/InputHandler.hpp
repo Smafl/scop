@@ -14,11 +14,10 @@ public:
 	static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 	static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
     static void cursor_position_callback(GLFWwindow *window, double xPos, double yPos);
+    static void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 
 private:
     void handleKeyInput(InputData* inputData, int key, int scancode, int action, int mods);
-    void handleMouseButton(InputData* inputData, int button, int action, int mods);
-    void handleScroll(InputData* inputData, double xoffset, double yoffset);
     void handleMouseMove(InputData* inputData, double xPos, double yPos);
 
 	InputHandler();

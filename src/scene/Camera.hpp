@@ -30,6 +30,7 @@ public:
 
 	void updateProjection();
 	void updateView();
+	void updateAspect(GLfloat width, GLfloat height);
 
 private:
 	Camera();

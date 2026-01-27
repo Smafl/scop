@@ -97,6 +97,7 @@ void Window::setUpUserInput(InputData &inputData) {
 	glfwSetMouseButtonCallback(_window, InputHandler::mouse_button_callback);
 	glfwSetScrollCallback(_window, InputHandler::scroll_callback);
 	glfwSetCursorPosCallback(_window, InputHandler::cursor_position_callback);
+	glfwSetFramebufferSizeCallback(_window, InputHandler::framebuffer_size_callback);
 ;}
 
 /**
