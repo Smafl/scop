@@ -39,6 +39,9 @@ Movement:
 | Move Forward | `Cmd + W` | `Ctrl + W` |
 | Move Backward | `Cmd + S` | `Ctrl + S` |
 
+Use `Shift` instead of `Cmd / Ctrl` for a bit faster movement.
+
+
 Rendering Options:
 | Action | macOS | Windows/Linux |
 |--------|-------|---------------|
