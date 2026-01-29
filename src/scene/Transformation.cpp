@@ -7,8 +7,13 @@ void Transformation::updateModelMatrix() {
     MatrixTransform::loadIdentity(modelMatrix);
     MatrixTransform::translate(modelMatrix, transform.translationX, transform.translationY, transform.translationZ);
 
+    GLfloat totalRotationY = transform.rotationY;
+    if (animationState.isRotate) {
+        totalRotationY = transform.baseRotationY + animationState.rotation;
+    }
+
     MatrixTransform::loadIdentity(rotateY);
-    MatrixTransform::rotateY(rotateY, transform.rotationY);
+    MatrixTransform::rotateY(rotateY, totalRotationY);
 
     MatrixTransform::loadIdentity(rotateX);
     MatrixTransform::rotateX(rotateX, transform.rotationX);
@@ -27,18 +32,6 @@ void Transformation::updateModelMatrix() {
     MatrixTransform::loadIdentity(scale);
     MatrixTransform::scale(scale, transform.scaleFactor);
     MatrixTransform::multiply(tempModel, scale, modelMatrix);
-
-    if (animationState.isRotate) {
-        GLfloat autoRotateY[16];
-        MatrixTransform::loadIdentity(autoRotateY);
-        MatrixTransform::rotateY(autoRotateY, animationState.rotation);
-
-        GLfloat result[16];
-        MatrixTransform::multiply(modelMatrix, autoRotateY, result);
-        for (int i = 0; i < 16; i++) {
-            modelMatrix[i] = result[i];
-        }
-    }
 }
 
 // void Transformation::updateModelMatrix() {

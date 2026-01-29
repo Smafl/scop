@@ -30,7 +30,15 @@ void InputHandler::handleKeyInput(InputData* inputData, int key, int scancode, i
 		switch (key) {
 			case GLFW_KEY_R:
 				// Rotation
-				inputData->transformation->animationState.isRotate = !(inputData->transformation->animationState.isRotate == true);
+				if (!inputData->transformation->animationState.isRotate) {
+					// Turning ON: save current manual rotation as base
+					inputData->transformation->transform.baseRotationY = inputData->transformation->transform.rotationY;
+			        inputData->transformation->animationState.rotation = 0.0f;
+			    } else {
+			        // Turning OFF: bake the auto-rotation into manual rotation
+			        inputData->transformation->transform.rotationY = inputData->transformation->transform.baseRotationY + inputData->transformation->animationState.rotation;
+			    }
+			    inputData->transformation->animationState.isRotate = !inputData->transformation->animationState.isRotate;
 				return;
 			case GLFW_KEY_T:
 				// Toggle texture/color

@@ -24,7 +24,8 @@ struct Transform {
 	GLfloat rotationX = 0.0f;
 	GLfloat rotationY = 0.0f;
 	GLfloat rotationZ = 0.0f;
-
+	GLfloat baseRotationY = 0.0f;
+	
     GLfloat scaleFactor = 0.075f;
 };
 
