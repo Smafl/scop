@@ -3,6 +3,7 @@
 #include "../shaders/ShaderProgram.hpp"
 #include "../modelLoader/RenderModelLoader.hpp"
 #include "../scene/Transformation.hpp"
+#include "../scene/Camera.hpp"
 #include "../scene/Material.hpp"
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
@@ -43,7 +44,7 @@ public:
 	void glSettings();
 	void cleanUp();
 
-	void renderFrame(double deltaTime, Transformation &transformation, Material &material);
+	void renderFrame(double deltaTime, Transformation &transformation, Camera &camera, Material &material);
 
 private:
 	Mesh _mesh;

@@ -15,6 +15,4 @@ struct MaterialBlend {
 class Material {
 public:
 	MaterialBlend materialBlend;
-
-	Material();
 };

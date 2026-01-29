@@ -6,7 +6,7 @@
 class MatrixTransformException : public std::exception {
 public:
 	enum ErrorCode {
-		EMPTY,
+		INVALID_MATRIX,
 	};
 
 	explicit MatrixTransformException(ErrorCode err);

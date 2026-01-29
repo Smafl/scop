@@ -11,16 +11,6 @@
 
 using namespace std;
 
-TextureException::TextureException(ErrorCode err)
-	: _errorCode(err) {}
-
-const char *TextureException::what() const noexcept {
-	switch (_errorCode) {
-		case NO_DATA: return "No texture data";
-		default: return "An unknown error occured during texture creating";
-	}
-}
-
 Texture::Texture(const string &path) :
 	_bmpImage(path)
 {

@@ -48,8 +48,7 @@ SRC =	src/main.cpp\
 		src/texture/BMPLoader.cpp\
 		src/matrixMath/MatrixTransform.cpp\
 		src/scene/Transformation.cpp\
-		src/scene/Material.cpp\
-		src/scene/Camera.cpp\
+		src/scene/Camera.cpp
 
 OBJ_DIR = obj
 

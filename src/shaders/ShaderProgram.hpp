@@ -8,7 +8,6 @@
 class ShaderProgramException : public std::exception {
 public:
 	enum ErrorCode {
-		// SHADER_FAILED,
 		LINKING_FAILED,
 	};
 

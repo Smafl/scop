@@ -286,7 +286,7 @@ void RenderModelLoader::centerVertices() {
     _bbox.minZ -= centerZ;
     _bbox.maxZ -= centerZ;
 
-    std::cout << "Model centered: offset(" << centerX << ", " << centerY << ", " << centerZ << ")\n";
+    // std::cout << "Model centered: offset(" << centerX << ", " << centerY << ", " << centerZ << ")\n";
 }
 
 void RenderModelLoader::buildMesh() {

@@ -61,16 +61,11 @@ int main(int args, char* argv[]) {
             double deltaTime = currentTime - prevTime;
             prevTime = currentTime;
 
-            render.renderFrame(deltaTime, transformation, material);
+            render.renderFrame(deltaTime, transformation, camera, material);
             camera.updateView();
             camera.updateProjection();
             transformation.updateModelMatrix();
-
-            glUniformMatrix4fv(render.getUniformLocation().modelMatrix, 1, GL_TRUE, transformation.modelMatrix);
-            glUniformMatrix4fv(render.getUniformLocation().viewMatrix, 1, GL_TRUE, camera.viewMatrix);
-            glUniformMatrix4fv(render.getUniformLocation().projectionMatrix, 1, GL_TRUE, camera.projectionMatrix);
-
-            glBindVertexArray(render.getVAO());
+            
             glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(renderModel.getMesh().indices.size()), GL_UNSIGNED_INT, 0);
 
             // Swap front and back buffers
@@ -96,8 +91,6 @@ int main(int args, char* argv[]) {
         cerr << "Matrix transformation error: " << e.what() << endl;
     } catch (const BMPLoaderException &e) {
         cerr << "BMP loader error: " << e.what() << endl;
-    } catch (const TextureException &e) {
-        cerr << "Texture error: " << e.what() << endl;
     } catch (const exception &e) {
         cerr << e.what() << endl;
     } catch (...) {

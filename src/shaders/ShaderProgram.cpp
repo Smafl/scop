@@ -12,7 +12,6 @@ ShaderProgramException::ShaderProgramException(ErrorCode err)
 
 const char *ShaderProgramException::what() const noexcept {
 	switch (_errorCode) {
-		// case SHADER_FAILED: return "Shader error";
 		case LINKING_FAILED: return "Linking shader program failed";
 		default: return "An unknown error occured during shader program creating";
 	}

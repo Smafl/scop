@@ -10,7 +10,7 @@ MatrixTransformException::MatrixTransformException(ErrorCode err)
 
 const char *MatrixTransformException::what() const noexcept {
 	switch (_errorCode) {
-		case EMPTY: return "Matrix is empty";
+		case INVALID_MATRIX: return "Invalid matrix";
 		default: return "An unknown error occured during matrix transformation";
 	}
 }
@@ -18,6 +18,8 @@ const char *MatrixTransformException::what() const noexcept {
 
 // scale
 void MatrixTransform::scale(GLfloat *matrix, GLfloat scaleFactor) {
+    if (!matrix) throw MatrixTransformException(MatrixTransformException::INVALID_MATRIX);
+
     matrix[0] = matrix[0] * scaleFactor;
     matrix[5] = matrix[5] * scaleFactor;
     matrix[10] = matrix[10] * scaleFactor;
@@ -26,6 +28,8 @@ void MatrixTransform::scale(GLfloat *matrix, GLfloat scaleFactor) {
 
 // rotate
 void MatrixTransform::rotateX(GLfloat *matrix, GLfloat angleDegree) {
+    if (!matrix) throw MatrixTransformException(MatrixTransformException::INVALID_MATRIX);
+
     GLfloat c = cosf(degreesToRadians(angleDegree));
     GLfloat s = sinf(degreesToRadians(angleDegree));
 
@@ -36,6 +40,8 @@ void MatrixTransform::rotateX(GLfloat *matrix, GLfloat angleDegree) {
 }
 
 void MatrixTransform::rotateY(GLfloat *matrix, GLfloat angleDegree) {
+    if (!matrix) throw MatrixTransformException(MatrixTransformException::INVALID_MATRIX);
+
     GLfloat c = cosf(degreesToRadians(angleDegree));
     GLfloat s = sinf(degreesToRadians(angleDegree));
 
@@ -46,6 +52,8 @@ void MatrixTransform::rotateY(GLfloat *matrix, GLfloat angleDegree) {
 }
 
 void MatrixTransform::rotateZ(GLfloat *matrix, GLfloat angleDegree) {
+    if (!matrix) throw MatrixTransformException(MatrixTransformException::INVALID_MATRIX);
+
     GLfloat c = cosf(degreesToRadians(angleDegree));
     GLfloat s = sinf(degreesToRadians(angleDegree));
 
@@ -58,6 +66,8 @@ void MatrixTransform::rotateZ(GLfloat *matrix, GLfloat angleDegree) {
 
 // translate
 void MatrixTransform::translate(GLfloat *matrix, GLfloat x, GLfloat y, GLfloat z) {
+    if (!matrix) throw MatrixTransformException(MatrixTransformException::INVALID_MATRIX);
+
 	matrix[3] = matrix[3] + x;
     matrix[7] = matrix[7] + y;
     matrix[11] = matrix[11] + z;
@@ -78,6 +88,8 @@ void MatrixTransform::loadIdentity(GLfloat *matrix) {
 
 // matrix multiplication
 void MatrixTransform::multiply(GLfloat *m1, GLfloat *m2, GLfloat *result) {
+    if (!m1 || !m2 || !result) throw MatrixTransformException(MatrixTransformException::INVALID_MATRIX);
+
     GLfloat temp[16];
     for (int row = 0; row < 4; ++row) {
         for (int col = 0; col < 4; ++col) {
@@ -94,6 +106,8 @@ void MatrixTransform::multiply(GLfloat *m1, GLfloat *m2, GLfloat *result) {
 
 // other
 void MatrixTransform::perspective(GLfloat *matrix, GLfloat fov, GLfloat aspect, GLfloat near, GLfloat far) {
+    if (!matrix) throw MatrixTransformException(MatrixTransformException::INVALID_MATRIX);
+
     GLfloat f = 1.0f / tan(degreesToRadians(fov) / 2.0f);
 
     matrix[0] = f / aspect;
