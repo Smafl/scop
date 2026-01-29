@@ -132,15 +132,14 @@ void InputHandler::mouse_button_callback(GLFWwindow* window, int button, int act
 }
 
 void InputHandler::scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-	(void)yoffset;
+	(void)xoffset;
 
 	InputData* inputData = static_cast<InputData*>(glfwGetWindowUserPointer(window));
 	if (!inputData) return;
 
-	// Multiply yoffset by a sensitivity factor to control speed
 	const float scrollSensitivity = 0.1f;
 
-	GLfloat newZ = inputData->transformation->transform.translationZ + xoffset * scrollSensitivity;
+	GLfloat newZ = inputData->transformation->transform.translationZ + yoffset * scrollSensitivity;
 	if (newZ <= inputData->transformation->maxZ && newZ >= inputData->transformation->minZ) {
 		inputData->transformation->transform.translationZ = newZ;
 	}
