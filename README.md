@@ -2,7 +2,7 @@
 
 A 3D model viewer built with OpenGL and c++20. Load and display `.obj` files and support basic interactions.
 
-It's a 42 school project, more info in [](scop.pdf)
+It's a 42 school project, more info in the [subject description](scop.pdf)
 
 ## 📦 Dependencies
 
