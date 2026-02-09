@@ -21,12 +21,18 @@ ifeq ($(UNAME_S),Darwin)
 else
 	CXXFLAGS += -std=c++2a
 
-	GLFW_INCLUDE = $(shell $(PKG_CONFIG) --cflags glfw3)
+	GLFW_AVAILABLE := $(shell $(PKG_CONFIG) --exists glfw3 && echo yes || echo no)
+	ifeq ($(GLFW_AVAILABLE),yes)
+		GLFW_INCLUDE = $(shell $(PKG_CONFIG) --cflags glfw3)
+		GLFW_LIB = $(shell $(PKG_CONFIG) --libs glfw3) -lGL -lX11 -lXi -lXrandr -lXinerama -lXcursor -ldl
+	else
+		GLFW_INCLUDE = -I$(HOME)/.local/include
+		GLFW_LIB = -L$(HOME)/.local/lib -lglfw3 -lGL -lX11 -lXi -lXrandr -lXinerama -lXcursor -ldl -lpthread -lm
+		GLFW_LIB += -Wl,-rpath,$(HOME)/.local/lib
+	endif
+	
 	GLM_INCLUDE = -I$(HOME)/.local/include
-	GLFW_LIB = $(shell $(PKG_CONFIG) --libs glfw3) -lGL -lX11 -lXi -lXrandr -lXinerama -lXcursor -ldl
 endif
-
-LEEAKSAN_LDFLAG = -L../LeakSanitizer -llsan -lc++ -Wno-gnu-include-next -I ../LeakSanitize
 
 GREEN = \033[0;32m
 RESET = \033[0m
@@ -79,4 +85,11 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all clean fclean re
+valgrind: $(NAME)
+	valgrind --leak-check=full \
+			 --show-leak-kinds=definite \
+			 --suppressions=valgrind.supp \
+			 --log-file=valgrind-out.txt \
+			 ./$(NAME) models/42.obj textureSources/unicorns.bmp
+
+.PHONY: all clean fclean re valgrind
