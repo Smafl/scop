@@ -22,8 +22,8 @@ int main(int args, char* argv[]) {
     int width = 0, height = 0;
     char *windowName = nullptr;
 
-    if (args < 2) {
-        cout << "File with a model is mandatory after executable file name" << endl;
+    if (args < 3) {
+        cout << "Usage: ./scop models/bird.obj textureSources/bird.bmp" << endl;
         return 0;
     }
     try {
@@ -65,7 +65,8 @@ int main(int args, char* argv[]) {
             camera.updateView();
             camera.updateProjection();
             transformation.updateModelMatrix();
-            
+
+            // A rendering function
             glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(renderModel.getMesh().indices.size()), GL_UNSIGNED_INT, 0);
 
             // Swap front and back buffers

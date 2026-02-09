@@ -85,7 +85,7 @@ struct RawOBJData {
 };
 
 struct Mesh {
-    std::vector<GLfloat> vertices;   // interleaved [x,y,z,u,v,r,g,b]
+    std::vector<GLfloat> vertices;   // interleaved [x,y,z,u,v,r_v,g_v,b_v,r_f,g_f,b_f]
     std::vector<GLuint> indices;     // deduplicated indices
 };
 

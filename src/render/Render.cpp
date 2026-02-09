@@ -22,6 +22,9 @@ Render::Render(const Mesh &mesh, ShaderProgram &shaderProgram)
 	:  _mesh(mesh), _shaderProgram(shaderProgram)
 {
 
+	// These commands set up the coordinates of the triangle to be rendered.
+	// They tell OpenGL the location in memory that the positions of the triangle will come from
+
 	glGenVertexArrays(1, &_VAO);
 	glBindVertexArray(_VAO);
 

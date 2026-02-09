@@ -2,6 +2,8 @@
 
 A 3D model viewer built with OpenGL and c++20. Load and display `.obj` files and support basic interactions.
 
+It's a 42 school project, more info in [](scop.pdf)
+
 ## 📦 Dependencies
 
 - [GLFW](https://www.glfw.org/) - window and input handling
@@ -19,8 +21,8 @@ make
 ### 📚 Info sources (might be not available):
 - [OpenGL Specification](https://registry.khronos.org/OpenGL/specs/gl/glspec46.core.pdf)
 - [GLFW documentation](https://www.glfw.org/docs/3.3/index.html)
-- [LearnOpenGL](https://learnopengl.com/Getting-started/OpenGL)
 - [Learning Modern 3D Graphics Programming](https://nicolbolas.github.io/oldtut/index.html)
+- [LearnOpenGL](https://learnopengl.com/Getting-started/OpenGL)
 - [Example Code](https://wikis.khronos.org/opengl/Example_Code#GLSL_expression_examples)
 - [C++ reading and writing BMP images](https://solarianprogrammer.com/2018/11/19/cpp-reading-writing-bmp-images/)
 - [BMP file format](https://en.wikipedia.org/wiki/BMP_file_format)
@@ -41,6 +43,7 @@ Movement:
 
 Use `Shift` instead of `Cmd / Ctrl` for a bit faster movement.
 
+Use mouse or touchpad scroll for scaling.
 
 Rendering Options:
 | Action | macOS | Windows/Linux |
@@ -48,3 +51,9 @@ Rendering Options:
 | Toggle Auto-rotation | `Cmd + R` | `Ctrl + R` |
 | Toggle Texture/Color | `Cmd + T` | `Ctrl + T` |
 | Cycle Color Modes | `Cmd + F` | `Ctrl + F` |
+
+### Demo
+
+![](pumpkin.gif)
+
+P.S. Pumpkin is really huge, just hit `Shift+S` many times 🥲
